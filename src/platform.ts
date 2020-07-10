@@ -16,8 +16,8 @@ import {
 } from 'homebridge';
 import { Client } from './client';
 
-const PLUGIN_NAME = "my-gekko-platform";
-const PLATFORM_NAME = "MyGekkoPlatform";
+const PLUGIN_NAME = "my-gekko";
+const PLATFORM_NAME = "MyGekko";
 
 let hap: HAP;
 let Accessory: typeof PlatformAccessory;
@@ -43,13 +43,13 @@ class Platform implements DynamicPlatformPlugin {
         this.api = api;
 
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
-            this.log.error('myGEKKO platform config missing. Check the config.json file.');
+            this.log.error('MyGekko platform config missing. Check the config.json file.');
             return;
         }
 
         this.client = new Client(config.host, config.username, config.password);
 
-        this.log.debug('myGEKKO platform finished initializing.');
+        this.log.debug('MyGekko platform finished initializing.');
 
         /*
          * When this event is fired, homebridge restored all cached accessories from disk and did call their respective
@@ -58,7 +58,7 @@ class Platform implements DynamicPlatformPlugin {
          * This event can also be used to start discovery of new accessories.
          */
         this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-            this.log.debug('myGEKKO platform finished launching.');
+            this.log.debug('MyGekko platform finished launching.');
 
             this.addAccessories()
                 .catch(this.log.error);

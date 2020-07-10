@@ -1,7 +1,7 @@
 {
   "name": "homebridge-my-gekko",
   "version": "0.1.1",
-  "description": "myGEKKO platform plugin for Homebridge written in Typescript",
+  "description": "MyGekko platform plugin for Homebridge written in Typescript",
   "keywords": [
     "homebridge-plugin",
     "homebridge",
