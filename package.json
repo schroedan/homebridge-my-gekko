@@ -1,7 +1,12 @@
 {
   "name": "homebridge-my-gekko",
-  "version": "0.1.0",
-  "description": "myGEKKO platform plugin for homebridge written in Typescript",
+  "version": "0.1.1",
+  "description": "myGEKKO platform plugin for Homebridge written in Typescript",
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "my-gekko"
+  ],
   "main": "dist/platform.js",
   "scripts": {
     "build": "rimraf ./dist && tsc",
@@ -28,11 +33,9 @@
   "bugs": {
     "url": "http://github.com/schroedan/homebridge-my-gekko/issues"
   },
-  "dependencies": {
-    "homebridge": "^1.0.4"
-  },
   "devDependencies": {
     "@types/node": "10.17.19",
+    "homebridge": "^1.0.4",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
     "ts-node": "^8.10.2",
