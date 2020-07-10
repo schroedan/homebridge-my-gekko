@@ -1,0 +1,29 @@
+{
+  "pluginAlias": "my-gekko",
+  "pluginType": "platform",
+  "singular": false,
+  "headerDisplay": null,
+  "footerDisplay": null,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "host": {
+        "title": "Host",
+        "type": "string",
+        "required": true
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "required": true
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true
+      }
+    }
+  },
+  "form": null,
+  "display": null
+}

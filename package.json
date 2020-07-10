@@ -1,0 +1,41 @@
+{
+  "name": "homebridge-my-gekko",
+  "version": "0.1.0",
+  "description": "myGEKKO platform plugin for homebridge written in Typescript",
+  "main": "dist/platform.js",
+  "scripts": {
+    "build": "rimraf ./dist && tsc",
+    "clean": "rimraf ./dist",
+    "prepublishOnly": "run-s build",
+    "postpublish": "run-s clean",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Schröder <daniel.schroeder@skriptfabrik.com>",
+  "engines": {
+    "homebridge": ">=1.0.0",
+    "node": ">=10.17.19"
+  },
+  "license": "ISC",
+  "files": [
+    "config.schema.json",
+    "LICENSE",
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/schroedan/homebridge-my-gekko.git"
+  },
+  "bugs": {
+    "url": "http://github.com/schroedan/homebridge-my-gekko/issues"
+  },
+  "dependencies": {
+    "homebridge": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "10.17.19",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.8.3"
+  }
+}
