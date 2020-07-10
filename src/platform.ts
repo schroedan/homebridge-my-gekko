@@ -16,7 +16,7 @@ import {
 } from 'homebridge';
 import { Client } from './client';
 
-const PLUGIN_NAME = "my-gekko";
+const PLUGIN_IDENTIFIER = "my-gekko";
 const PLATFORM_NAME = "MyGekko";
 
 let hap: HAP;
@@ -26,7 +26,7 @@ export = (api: API) => {
     hap = api.hap;
     Accessory = api.platformAccessory;
 
-    api.registerPlatform(PLATFORM_NAME, Platform);
+    api.registerPlatform(PLUGIN_IDENTIFIER, PLATFORM_NAME, Platform);
 };
 
 class Platform implements DynamicPlatformPlugin {
@@ -43,13 +43,13 @@ class Platform implements DynamicPlatformPlugin {
         this.api = api;
 
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
-            this.log.error('MyGekko platform config missing. Check the config.json file.');
+            this.log.error('Platform config missing. Check the config.json file.');
             return;
         }
 
         this.client = new Client(config.host, config.username, config.password);
 
-        this.log.debug('MyGekko platform finished initializing.');
+        this.log('Platform finished initializing.');
 
         /*
          * When this event is fired, homebridge restored all cached accessories from disk and did call their respective
@@ -58,7 +58,7 @@ class Platform implements DynamicPlatformPlugin {
          * This event can also be used to start discovery of new accessories.
          */
         this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-            this.log.debug('MyGekko platform finished launching.');
+            this.log('Platform finished launching.');
 
             this.addAccessories()
                 .catch(this.log.error);
@@ -75,7 +75,7 @@ class Platform implements DynamicPlatformPlugin {
                     .reduce((accumulator, values) => accumulator.concat(values), [])
                     .filter((accessory) => undefined === this.accessories.find((predicate) => {
                         if (accessory.UUID === predicate.UUID) {
-                            this.log.debug('Accessory %s already registered, skipping.', accessory.displayName);
+                            this.log('Accessory %s already registered, skipping.', accessory.displayName);
                             return true;
                         }
 
@@ -86,7 +86,7 @@ class Platform implements DynamicPlatformPlugin {
                         return accessory;
                     })
 
-                this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, accessories);
+                this.api.registerPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, accessories);
             });
     }
 
@@ -111,10 +111,10 @@ class Platform implements DynamicPlatformPlugin {
      * It should be used to setup event handlers for characteristics and update respective values.
      */
     configureAccessory(accessory: PlatformAccessory): void {
-        this.log.debug('Configuring accessory %s.', accessory.displayName);
+        this.log('Configuring accessory %s.', accessory.displayName);
 
         accessory.on(PlatformAccessoryEvent.IDENTIFY, () => {
-            this.log.debug('%s identified.', accessory.displayName);
+            this.log('Accessory %s identified.', accessory.displayName);
         });
 
         switch (accessory.category) {
@@ -141,7 +141,7 @@ class Platform implements DynamicPlatformPlugin {
 
         service.getCharacteristic(hap.Characteristic.CurrentPosition)
             .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                this.log.debug('WindowCovering::GetCurrentPosition');
+                this.log('WindowCovering::GetCurrentPosition');
 
                 callback(null, 1);
 
@@ -158,14 +158,14 @@ class Platform implements DynamicPlatformPlugin {
 
         service.getCharacteristic(hap.Characteristic.TargetPosition)
             .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                this.log.debug('WindowCovering::GetTargetPosition %s', context.targetPosition);
+                this.log('WindowCovering::GetTargetPosition %s', context.targetPosition);
 
                 callback(null, 1);
 
                 //callback(null, context.targetPosition);
             })
             .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-                this.log.debug("WindowCovering::SetTargetPosition %s", value);
+                this.log("WindowCovering::SetTargetPosition %s", value);
 
                 context.targetPosition = value;
 
