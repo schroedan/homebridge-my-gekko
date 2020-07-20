@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "MyGekko",
+  "pluginAlias": "myGEKKO",
   "pluginType": "platform",
   "singular": false,
   "headerDisplay": null,
@@ -21,6 +21,26 @@
         "title": "Password",
         "type": "string",
         "required": true
+      },
+      "ttl": {
+        "title": "Request cache TTL in ms",
+        "type": "number",
+        "placeholder": 1000
+      },
+      "interval": {
+        "title": "Update interval in ms",
+        "type": "number",
+        "placeholder": 10000
+      },
+      "delay": {
+        "title": "Allocation delay in ms",
+        "type": "number",
+        "placeholder": 300
+      },
+      "reset": {
+        "title": "Re-register accessories after reboot",
+        "type": "boolean",
+        "placeholder": false
       }
     }
   },

@@ -2,197 +2,142 @@ import {
     API,
     APIEvent,
     Categories,
-    CharacteristicEventTypes,
-    CharacteristicGetCallback,
-    CharacteristicSetCallback,
-    CharacteristicValue,
     DynamicPlatformPlugin,
-    HAP,
     Logging,
     PlatformAccessory,
     PlatformAccessoryEvent,
     PlatformConfig,
-    Service,
 } from 'homebridge';
-import { Client } from './client';
+import { WindowCovering } from './accessory';
+import { Client } from './api';
+import Timeout = NodeJS.Timeout;
 
-const PLUGIN_IDENTIFIER = "my-gekko";
-const PLATFORM_NAME = "MyGekko";
+export const PLUGIN_IDENTIFIER = "my-gekko";
+export const PLATFORM_NAME = "myGEKKO";
 
-let hap: HAP;
-let Accessory: typeof PlatformAccessory;
+export class Platform implements DynamicPlatformPlugin {
 
-export = (api: API) => {
-    hap = api.hap;
-    Accessory = api.platformAccessory;
+    private _client?: Client;
 
-    api.registerPlatform(PLUGIN_IDENTIFIER, PLATFORM_NAME, Platform);
-};
-
-class Platform implements DynamicPlatformPlugin {
-
-    private readonly log: Logging;
-    private readonly config: PlatformConfig;
-    private readonly api: API;
-    private readonly client?: Client;
+    private readonly watchers: Timeout[] = [];
     private readonly accessories: PlatformAccessory[] = [];
 
-    constructor(log: Logging, config: PlatformConfig, api: API) {
-        this.log = log;
-        this.config = config;
-        this.api = api;
-
+    constructor(public readonly log: Logging, public readonly config: PlatformConfig, public readonly api: API) {
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
-            this.log.error('Platform config missing. Check the config.json file.');
+            this.log.error('Platform config missing - please check the config file');
             return;
         }
 
-        this.client = new Client(config.host, config.username, config.password);
-
-        this.log('Platform finished initializing.');
+        this.log('Platform finished initializing');
 
         /*
-         * When this event is fired, homebridge restored all cached accessories from disk and did call their respective
+         * When this event is fired, Homebridge restored all cached accessories from disk and did call their respective
          * `configureAccessory` method for all of them. Dynamic Platform plugins should only register new accessories
-         * after this event was fired, in order to ensure they weren't added to homebridge already.
+         * after this event was fired, in order to ensure they weren't added to Homebridge already.
          * This event can also be used to start discovery of new accessories.
          */
-        this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-            this.log('Platform finished launching.');
-
-            this.addAccessories()
-                .catch(this.log.error);
-        });
+        this.api.on(APIEvent.DID_FINISH_LAUNCHING, this.onFinishedLaunching.bind(this));
     }
 
-    addAccessories(): Promise<void> {
+    get client(): Client {
+        if (this._client === undefined) {
+            this._client = new Client({
+                host: this.config.host,
+                username: this.config.username,
+                password: this.config.password,
+                ttl: this.config.ttl
+            });
+        }
+
+        return this._client;
+    }
+
+    onFinishedLaunching(): void {
+        this.log('Platform finished launching');
+
+        if (this.config.reset) {
+            this.removeAccessories();
+        }
+
+        this.discoverAccessories()
+            .then((accessories: PlatformAccessory[]) => {
+                this.addAccessories(this.filterConfiguredAccessories(accessories));
+            })
+            .catch(this.log.error);
+    }
+
+    discoverAccessories(): Promise<PlatformAccessory[]> {
+        this.log('Discovering accessories');
+
         return Promise
             .all([
                 this.discoverWindowCoveringAccessories()
             ])
             .then((accessoriesList) => {
-                const accessories = accessoriesList
-                    .reduce((accumulator, values) => accumulator.concat(values), [])
-                    .filter((accessory) => undefined === this.accessories.find((predicate) => {
-                        if (accessory.UUID === predicate.UUID) {
-                            this.log('Accessory %s already registered, skipping.', accessory.displayName);
-                            return true;
-                        }
-
-                        return false;
-                    }))
-                    .map((accessory) => {
-                        this.configureAccessory(accessory);
-                        return accessory;
-                    })
-
-                this.api.registerPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, accessories);
+                return accessoriesList.reduce((previousAccessories, currentAccessories) => previousAccessories.concat(currentAccessories), [])
             });
     }
 
     discoverWindowCoveringAccessories(): Promise<PlatformAccessory[]> {
-        return this.client!.getBlinds()
+        return this.client.getBlinds()
             .then((blinds) => blinds.map((blind) => {
-                const uuid = hap.uuid.generate(blind.name);
-                const accessory = new Accessory(blind.name, uuid, Categories.WINDOW_COVERING);
+                const uuid = this.api.hap.uuid.generate(`my-gekko/blinds/${blind.key}`);
+                const accessory = new (this.api.platformAccessory)(blind.name, uuid, Categories.WINDOW_COVERING);
 
-                accessory.addService(hap.Service.WindowCovering);
-                accessory.context = {
-                    key: blind.key,
-                    data: blind.data,
-                };
+                accessory.addService(this.api.hap.Service.WindowCovering);
+                accessory.context.key = blind.key;
 
                 return accessory;
             }));
     }
 
-    /*
-     * This function is invoked when homebridge restores cached accessories from disk at startup.
+    filterConfiguredAccessories(accessories: PlatformAccessory[]): PlatformAccessory[] {
+        return accessories.filter((accessory) => undefined === this.accessories.find((predicate) => accessory.UUID === predicate.UUID));
+    }
+
+    /**
+     * Configure and register accessories
+     *
+     * @param accessories
+     */
+    addAccessories(accessories: PlatformAccessory[]): void {
+        this.api.registerPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, accessories.map((accessory) => {
+            this.log('Adding accessory %s', accessory.displayName);
+
+            this.configureAccessory(accessory);
+            return accessory;
+        }));
+    }
+
+    /**
+     * This function is invoked when Homebridge restores cached accessories from disk at startup.
      * It should be used to setup event handlers for characteristics and update respective values.
      */
     configureAccessory(accessory: PlatformAccessory): void {
-        this.log('Configuring accessory %s.', accessory.displayName);
-
         accessory.on(PlatformAccessoryEvent.IDENTIFY, () => {
-            this.log('Accessory %s identified.', accessory.displayName);
+            this.log('Accessory %s identified', accessory.displayName);
         });
 
         switch (accessory.category) {
             case Categories.WINDOW_COVERING:
-                this.configureWindowCoveringAccessory(accessory);
+                const windowCovering = new WindowCovering(this, accessory);
+                windowCovering.configure().catch(this.log.error);
+                if (windowCovering.updateWatcher !== undefined) {
+                    this.watchers.push(windowCovering.updateWatcher);
+                }
                 break;
         }
 
         this.accessories.push(accessory);
     }
 
-    configureWindowCoveringAccessory(accessory: PlatformAccessory): void {
-        const windowCoveringService = accessory.getService(hap.Service.WindowCovering);
+    removeAccessories() {
+        this.log('Removing accessories');
 
-        if (windowCoveringService === undefined) {
-            return;
-        }
+        this.watchers.forEach(clearInterval);
+        this.watchers.splice(0, this.watchers.length); // clear out the array
 
-        this.configureWindowCoveringCharacteristics(windowCoveringService, accessory.context);
-    }
-
-    configureWindowCoveringCharacteristics(service: Service, context: any): void {
-        //const blind = new Blind(this.client, context.key, context.data);
-
-        service.getCharacteristic(hap.Characteristic.CurrentPosition)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                this.log('WindowCovering::GetCurrentPosition');
-
-                callback(null, 1);
-
-                /*
-                blind.getPosition()
-                    .then((position) => {
-                        callback(null, Math.round(position));
-                    })
-                    .catch((error) => {
-                        callback(error);
-                    });
-                */
-            });
-
-        service.getCharacteristic(hap.Characteristic.TargetPosition)
-            .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-                this.log('WindowCovering::GetTargetPosition %s', context.targetPosition);
-
-                callback(null, 1);
-
-                //callback(null, context.targetPosition);
-            })
-            .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-                this.log("WindowCovering::SetTargetPosition %s", value);
-
-                context.targetPosition = value;
-
-                callback(null);
-
-                /*
-                blind.setPosition(value as number)
-                    .then(() => {
-                        callback(null);
-                    })
-                    .catch((error) => {
-                        callback(error);
-                    });
-                */
-            });
-
-        service.getCharacteristic(hap.Characteristic.PositionState)
-            .updateValue(hap.Characteristic.PositionState.STOPPED);
-
-        service.getCharacteristic(hap.Characteristic.ObstructionDetected)
-            .updateValue(false);
-    }
-
-    /*
-    unregisterAccessories() {
-        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, this.accessories);
+        this.api.unregisterPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, this.accessories);
         this.accessories.splice(0, this.accessories.length); // clear out the array
     }
-    */
 }

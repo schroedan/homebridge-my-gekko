@@ -1,13 +1,13 @@
 {
   "name": "homebridge-my-gekko",
-  "version": "0.1.3",
-  "description": "MyGekko platform plugin for Homebridge written in Typescript",
+  "version": "0.1.4",
+  "description": "myGEKKO platform plugin for Homebridge written in Typescript",
   "keywords": [
     "homebridge-plugin",
     "homebridge",
     "my-gekko"
   ],
-  "main": "dist/platform.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "clean": "rimraf ./dist",
@@ -23,7 +23,6 @@
   "license": "ISC",
   "files": [
     "config.schema.json",
-    "LICENSE",
     "dist"
   ],
   "repository": {
