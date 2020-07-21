@@ -2,6 +2,9 @@ language: node_js
 node_js:
 - 10
 
+before_deploy:
+  - yarn --frozen-lockfile
+
 deploy:
   provider: npm
   email: daniel.schroeder@skriptfabrik.com
