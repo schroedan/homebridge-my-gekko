@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+- "10.17"
+
+deploy:
+  provider: npm
+  email: daniel.schroeder@skriptfabrik.com
+  api_key:
+    secure: aTv6A2WpXWVJQ1zuCy+SbwgScPOeV9GhpQcjOstgnyU79hJBi6AaoxUmLQ1Tg4PuZuEyK23SWRlG83R6gv+YII9dF9OGbAqrebEBId3SFbwcpozPSFGPufI/mshZVdPqBKXZAoCGfeIoQXKqZ7zVTqRNAgm/JiCuojgcy456PTwbF59xsoCgUZT8xow+/FzlzgBr3YajHNLZeHnjMGt81x9RcWax/T3oQEM7Z3t1UHAUuIvaQrlvPegP11fHzrueutwBGAGOEN9t2+hvT5/yFojsNmJb/dep7oQEfR5SpYjYGULOVUdlpTCRJd/sR1CHpRma3AzlAvtyNA6G4o5MetfwcwnTIIu65lxKhNF/Q8vHNNQFa4d5cRsGHxTuMwZbN24+oH52PzL1+MfVKsGPtOcmSqUfI+Fiq/Hhu+eLG3n3TTbERZADTPil7A4B5FZClquZ4CJYy2kKiovM+FNoAsOD6fxt7Yn9eVHcM9+uLs+cn0Qc9IdWxgv2omrWYiCQFcqPRgDJutuVPxRxbgRP0rYM6WgZXlWcGUHwrfpQ2+ZjD5k494AKYst+C4RMvc48IzpTlaKwsMLtkLFbuG4sWfpdIMLuypQVRdLwC+KwT7PH5aHI+QnixaoBb/ptxxhP+6LxepleNTBDzRzZJvSZ6DVvuA/y91vNFdHBGhzigoo=

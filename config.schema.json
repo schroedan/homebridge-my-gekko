@@ -8,39 +8,38 @@
     "type": "object",
     "properties": {
       "host": {
-        "title": "Host",
+        "title": "QueryAPI host",
         "type": "string",
         "required": true
       },
       "username": {
-        "title": "Username",
+        "title": "QueryAPI username",
         "type": "string",
         "required": true
       },
       "password": {
-        "title": "Password",
+        "title": "QueryAPI password",
         "type": "string",
         "required": true
       },
       "ttl": {
-        "title": "Request cache TTL in ms",
+        "title": "Client cache TTL in seconds",
         "type": "number",
-        "placeholder": 1000
+        "placeholder": 1
       },
       "interval": {
-        "title": "Update interval in ms",
+        "title": "Update interval in seconds",
         "type": "number",
-        "placeholder": 10000
+        "placeholder": 60
       },
       "delay": {
         "title": "Allocation delay in ms",
         "type": "number",
-        "placeholder": 300
+        "placeholder": 500
       },
-      "reset": {
-        "title": "Re-register accessories after reboot",
-        "type": "boolean",
-        "placeholder": false
+      "debug": {
+        "title": "Enable debug mode",
+        "type": "boolean"
       }
     }
   },
