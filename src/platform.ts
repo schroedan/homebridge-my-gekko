@@ -5,10 +5,9 @@ import {
     DynamicPlatformPlugin,
     Logging,
     PlatformAccessory,
-    PlatformAccessoryEvent,
     PlatformConfig,
 } from 'homebridge';
-import { WindowCovering } from './accessory';
+import { AccessoryFactory, WindowCoveringController } from './accessory';
 import { Client } from './api';
 import Timeout = NodeJS.Timeout;
 
@@ -17,6 +16,7 @@ export const PLATFORM_NAME = "myGEKKO";
 
 export class Platform implements DynamicPlatformPlugin {
 
+    private _accessoryFactory?: AccessoryFactory;
     private _client?: Client;
 
     private readonly watchers: Timeout[] = [];
@@ -39,6 +39,14 @@ export class Platform implements DynamicPlatformPlugin {
         this.api.on(APIEvent.DID_FINISH_LAUNCHING, this.onFinishedLaunching.bind(this));
     }
 
+    get accessoryFactory(): AccessoryFactory {
+        if (this._accessoryFactory === undefined) {
+            this._accessoryFactory = new AccessoryFactory(this);
+        }
+
+        return this._accessoryFactory;
+    }
+
     get client(): Client {
         if (this._client === undefined) {
             this._client = new Client({
@@ -55,13 +63,11 @@ export class Platform implements DynamicPlatformPlugin {
     onFinishedLaunching(): void {
         this.log('Platform finished launching');
 
-        if (this.config.reset) {
-            this.removeAccessories();
-        }
+        this.config.debug && this.removeAccessories();
 
         this.discoverAccessories()
             .then((accessories: PlatformAccessory[]) => {
-                this.addAccessories(this.filterConfiguredAccessories(accessories));
+                this.addAccessories(accessories);
             })
             .catch(this.log.error);
     }
@@ -73,26 +79,16 @@ export class Platform implements DynamicPlatformPlugin {
             .all([
                 this.discoverWindowCoveringAccessories()
             ])
-            .then((accessoriesList) => {
-                return accessoriesList.reduce((previousAccessories, currentAccessories) => previousAccessories.concat(currentAccessories), [])
+            .then((list) => {
+                return list.reduce((previous, current) => previous.concat(current), [])
             });
     }
 
     discoverWindowCoveringAccessories(): Promise<PlatformAccessory[]> {
         return this.client.getBlinds()
             .then((blinds) => blinds.map((blind) => {
-                const uuid = this.api.hap.uuid.generate(`my-gekko/blinds/${blind.key}`);
-                const accessory = new (this.api.platformAccessory)(blind.name, uuid, Categories.WINDOW_COVERING);
-
-                accessory.addService(this.api.hap.Service.WindowCovering);
-                accessory.context.key = blind.key;
-
-                return accessory;
+                return this.accessoryFactory.createWindowCoveringAccessory(blind);
             }));
-    }
-
-    filterConfiguredAccessories(accessories: PlatformAccessory[]): PlatformAccessory[] {
-        return accessories.filter((accessory) => undefined === this.accessories.find((predicate) => accessory.UUID === predicate.UUID));
     }
 
     /**
@@ -101,12 +97,18 @@ export class Platform implements DynamicPlatformPlugin {
      * @param accessories
      */
     addAccessories(accessories: PlatformAccessory[]): void {
-        this.api.registerPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, accessories.map((accessory) => {
+        accessories = accessories.filter((accessory) => {
+            return undefined === this.accessories.find((predicate) => accessory.UUID === predicate.UUID)
+        });
+
+        accessories = accessories.map((accessory) => {
             this.log('Adding accessory %s', accessory.displayName);
 
             this.configureAccessory(accessory);
             return accessory;
-        }));
+        });
+
+        this.api.registerPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, accessories);
     }
 
     /**
@@ -114,21 +116,23 @@ export class Platform implements DynamicPlatformPlugin {
      * It should be used to setup event handlers for characteristics and update respective values.
      */
     configureAccessory(accessory: PlatformAccessory): void {
-        accessory.on(PlatformAccessoryEvent.IDENTIFY, () => {
-            this.log('Accessory %s identified', accessory.displayName);
-        });
-
         switch (accessory.category) {
             case Categories.WINDOW_COVERING:
-                const windowCovering = new WindowCovering(this, accessory);
-                windowCovering.configure().catch(this.log.error);
-                if (windowCovering.updateWatcher !== undefined) {
-                    this.watchers.push(windowCovering.updateWatcher);
-                }
+                this.configureWindowCoveringAccessory(accessory);
                 break;
         }
 
         this.accessories.push(accessory);
+    }
+
+    configureWindowCoveringAccessory(accessory: PlatformAccessory): void {
+        const controller = new WindowCoveringController(this, accessory);
+
+        controller.register()
+            .then((watcher) => {
+                this.watchers.push(watcher);
+            })
+            .catch(this.log.error);
     }
 
     removeAccessories() {

@@ -54,7 +54,7 @@ export class Client {
 
     sendCachedRequest(url: Url): Promise<any> {
         const key = url.toString();
-        const ttl = this.config.ttl ?? 1000;
+        const ttl = (this.config.ttl ?? 1) * 1000;
 
         if (this.cache[key] === undefined || this.cache[key].time + ttl < Date.now()) {
             this.cache[key] = {

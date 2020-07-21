@@ -1,3 +1,4 @@
+import { debounce } from 'debounce';
 import {
     CharacteristicEventTypes,
     CharacteristicGetCallback,
@@ -10,16 +11,9 @@ import { Blind, BlindState, BlindSumState } from '../api';
 import { Platform } from '../platform';
 import Timeout = NodeJS.Timeout;
 
-export class WindowCovering {
-
-    private _updateWatcher?: Timeout;
-    private _positionAllocator?: Timeout;
+export class WindowCoveringController {
 
     constructor(private readonly platform: Platform, private readonly accessory: PlatformAccessory) {
-    }
-
-    get updateWatcher(): Timeout | undefined {
-        return this._updateWatcher;
     }
 
     getBlind(): Promise<Blind> {
@@ -49,11 +43,10 @@ export class WindowCovering {
     async updateDisplayName(): Promise<void> {
         const blind = await this.getBlind();
         const service = await this.getService();
-        const characteristic = service.getCharacteristic(this.platform.api.hap.Characteristic.Name);
 
         this.accessory.displayName = blind.name;
 
-        characteristic.updateValue(this.accessory.displayName);
+        service.updateCharacteristic(this.platform.api.hap.Characteristic.Name, this.accessory.displayName);
     }
 
     async getCurrentPosition(): Promise<number> {
@@ -67,9 +60,8 @@ export class WindowCovering {
         const blind = await this.getBlind();
         const position = await blind.getPosition();
         const service = await this.getService();
-        const characteristic = service.getCharacteristic(this.platform.api.hap.Characteristic.CurrentPosition);
 
-        characteristic.updateValue(Math.round(100 - position));
+        service.updateCharacteristic(this.platform.api.hap.Characteristic.CurrentPosition, Math.round(100 - position));
     }
 
     async getTargetPosition(): Promise<number> {
@@ -82,11 +74,10 @@ export class WindowCovering {
     async applyTargetPosition(value: number): Promise<void> {
         const blind = await this.getBlind();
         const service = await this.getService();
-        const characteristic = service.getCharacteristic(this.platform.api.hap.Characteristic.TargetPosition);
 
-        characteristic.updateValue(value);
+        service.updateCharacteristic(this.platform.api.hap.Characteristic.TargetPosition, value);
 
-        await blind.setPosition(100 - (characteristic.value as number));
+        await blind.setPosition(100 - value);
     }
 
     async getPositionState(): Promise<number> {
@@ -100,19 +91,18 @@ export class WindowCovering {
         const blind = await this.getBlind();
         const state = await blind.getState();
         const service = await this.getService();
-        const characteristic = service.getCharacteristic(this.platform.api.hap.Characteristic.PositionState);
 
         switch (state) {
             case BlindState.HOLD_DOWN:
             case BlindState.DOWN:
-                characteristic.updateValue(this.platform.api.hap.Characteristic.PositionState.DECREASING);
+                service.updateCharacteristic(this.platform.api.hap.Characteristic.PositionState, this.platform.api.hap.Characteristic.PositionState.DECREASING);
                 break;
             case BlindState.HOLD_UP:
             case BlindState.UP:
-                characteristic.updateValue(this.platform.api.hap.Characteristic.PositionState.INCREASING);
+                service.updateCharacteristic(this.platform.api.hap.Characteristic.PositionState, this.platform.api.hap.Characteristic.PositionState.INCREASING);
                 break;
             default:
-                characteristic.updateValue(this.platform.api.hap.Characteristic.PositionState.STOPPED);
+                service.updateCharacteristic(this.platform.api.hap.Characteristic.PositionState, this.platform.api.hap.Characteristic.PositionState.STOPPED);
         }
     }
 
@@ -120,9 +110,8 @@ export class WindowCovering {
         const blind = await this.getBlind();
         const sumState = await blind.getSumState();
         const service = await this.getService();
-        const characteristic = service.getCharacteristic(this.platform.api.hap.Characteristic.ObstructionDetected);
 
-        characteristic.updateValue(sumState !== BlindSumState.OK);
+        service.updateCharacteristic(this.platform.api.hap.Characteristic.ObstructionDetected, sumState !== BlindSumState.OK);
     }
 
     async update(): Promise<void> {
@@ -134,15 +123,13 @@ export class WindowCovering {
         await this.updateObstructionDetected();
     }
 
-    async configure(): Promise<void> {
-        this.platform.log('Configuring window covering %s', this.accessory.displayName);
-
+    async register(): Promise<Timeout> {
         await this.update();
 
         const service = await this.getService();
+        const position = await this.getCurrentPosition();
 
-        service.getCharacteristic(this.platform.api.hap.Characteristic.TargetPosition)
-            .setValue(await this.getCurrentPosition());
+        service.updateCharacteristic(this.platform.api.hap.Characteristic.TargetPosition, position);
 
         service.getCharacteristic(this.platform.api.hap.Characteristic.CurrentPosition)
             .on(CharacteristicEventTypes.GET, this.onGetCurrentPosition.bind(this));
@@ -154,11 +141,7 @@ export class WindowCovering {
         service.getCharacteristic(this.platform.api.hap.Characteristic.PositionState)
             .on(CharacteristicEventTypes.GET, this.onGetPositionState.bind(this));
 
-        if (this._updateWatcher !== undefined) {
-            clearInterval(this._updateWatcher);
-        }
-
-        this._updateWatcher = setInterval(this.update.bind(this), this.platform.config.interval ?? 10000);
+        return setInterval(this.update.bind(this), (this.platform.config.interval ?? 60) * 1000);
     }
 
     onGetCurrentPosition(callback: CharacteristicGetCallback): void {
@@ -187,13 +170,9 @@ export class WindowCovering {
     onSetTargetPosition(value: CharacteristicValue, callback: CharacteristicSetCallback): void {
         this.platform.log('Setting target position of window covering %s to %s', this.accessory.displayName, value);
 
-        if (this._positionAllocator !== undefined) {
-            clearTimeout(this._positionAllocator);
-        }
-
-        this._positionAllocator = setTimeout(() => {
+        debounce(() => {
             this.applyTargetPosition(value as number).catch(callback);
-        }, this.platform.config.delay ?? 300);
+        }, this.platform.config.delay ?? 500);
 
         callback();
     }

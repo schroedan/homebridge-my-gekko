@@ -32,7 +32,11 @@
   "bugs": {
     "url": "http://github.com/schroedan/homebridge-my-gekko/issues"
   },
+  "dependencies": {
+    "debounce": "^1.2.0"
+  },
   "devDependencies": {
+    "@types/debounce": "^1.2.0",
     "@types/node": "10.17.19",
     "homebridge": "^1.0.4",
     "npm-run-all": "^4.1.5",
