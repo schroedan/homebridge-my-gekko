@@ -112,8 +112,11 @@ export class Platform implements DynamicPlatformPlugin {
     }
 
     /**
-     * This function is invoked when Homebridge restores cached accessories from disk at startup.
-     * It should be used to setup event handlers for characteristics and update respective values.
+     * This method is called for every PlatformAccessory, which is recreated from disk on startup.
+     * It should be used to properly initialize the Accessory and setup all event handlers for
+     * all services and their characteristics.
+     *
+     * @param {PlatformAccessory} accessory which needs to be configured
      */
     configureAccessory(accessory: PlatformAccessory): void {
         switch (accessory.category) {
