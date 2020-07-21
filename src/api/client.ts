@@ -1,5 +1,6 @@
 import { get as httpGet } from "http";
 import { Blind } from './blind';
+import { Meteo } from './meteo';
 import { Url } from './url';
 
 type RequestCache = Record<string, { time: number, request: Promise<any> }>;
@@ -64,6 +65,17 @@ export class Client {
         }
 
         return this.cache[key].request;
+    }
+
+    async getMeteo(): Promise<Meteo | undefined> {
+        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/var/globals`);
+        const data = await this.sendCachedRequest(url);
+
+        if (data.meteo === undefined) {
+            return;
+        }
+
+        return new Meteo(this);
     }
 
     async getBlinds(): Promise<Blind[]> {

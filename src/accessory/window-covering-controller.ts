@@ -1,4 +1,3 @@
-import { debounce } from 'debounce';
 import {
     CharacteristicEventTypes,
     CharacteristicGetCallback,
@@ -12,6 +11,8 @@ import { Platform } from '../platform';
 import Timeout = NodeJS.Timeout;
 
 export class WindowCoveringController {
+
+    private _targetPositionAllocator?: Timeout;
 
     constructor(private readonly platform: Platform, private readonly accessory: PlatformAccessory) {
     }
@@ -170,9 +171,17 @@ export class WindowCoveringController {
     onSetTargetPosition(value: CharacteristicValue, callback: CharacteristicSetCallback): void {
         this.platform.log('Setting target position of window covering %s to %s', this.accessory.displayName, value);
 
-        debounce(() => {
-            this.applyTargetPosition(value as number).catch(callback);
+        if (this._targetPositionAllocator !== undefined) {
+            clearTimeout(this._targetPositionAllocator);
+        }
+
+        this._targetPositionAllocator = setTimeout(() => {
+            this._targetPositionAllocator = undefined;
+            this.applyTargetPosition(value as number)
+                .catch(callback)
         }, this.platform.config.delay ?? 500);
+
+        this._targetPositionAllocator.unref(); // unblock
 
         callback();
     }

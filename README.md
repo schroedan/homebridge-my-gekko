@@ -7,7 +7,8 @@
 myGEKKO platform plugin for Homebridge written in Typescript
 
 This plugin exposes:
-* Blinds as Window Coverings
+* Blinds as window coverings
+* Meteo temperature as temperature sensor
 
 ## Installation
 

@@ -7,7 +7,12 @@ import {
     PlatformAccessory,
     PlatformConfig,
 } from 'homebridge';
-import { AccessoryFactory, WindowCoveringController } from './accessory';
+import {
+    AccessoryFactory,
+    TEMPERATURE_SENSOR_NAME,
+    TemperatureSensorController,
+    WindowCoveringController
+} from './accessory';
 import { Client } from './api';
 import Timeout = NodeJS.Timeout;
 
@@ -77,10 +82,23 @@ export class Platform implements DynamicPlatformPlugin {
 
         return Promise
             .all([
+                this.discoverMeteoAccessories(),
                 this.discoverWindowCoveringAccessories()
             ])
             .then((list) => {
                 return list.reduce((previous, current) => previous.concat(current), [])
+            });
+    }
+
+    discoverMeteoAccessories(): Promise<PlatformAccessory[]> {
+        return this.client.getMeteo()
+            .then((meteo) => {
+                const accessories = [];
+                if (meteo !== undefined) {
+                    accessories.push(this.accessoryFactory.createTemperatureSensorAccessory(meteo));
+                }
+
+                return accessories;
             });
     }
 
@@ -125,7 +143,23 @@ export class Platform implements DynamicPlatformPlugin {
                 break;
         }
 
+        if (accessory.category === Categories.OTHER) {
+            if (accessory.displayName === TEMPERATURE_SENSOR_NAME) {
+                this.configureTemperatureSensorAccessory(accessory);
+            }
+        }
+
         this.accessories.push(accessory);
+    }
+
+    configureTemperatureSensorAccessory(accessory: PlatformAccessory): void {
+        const controller = new TemperatureSensorController(this, accessory);
+
+        controller.register()
+            .then((watcher) => {
+                this.watchers.push(watcher);
+            })
+            .catch(this.log.error);
     }
 
     configureWindowCoveringAccessory(accessory: PlatformAccessory): void {
