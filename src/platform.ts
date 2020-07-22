@@ -1,20 +1,7 @@
-import {
-    API,
-    APIEvent,
-    Categories,
-    DynamicPlatformPlugin,
-    Logging,
-    PlatformAccessory,
-    PlatformConfig,
-} from 'homebridge';
-import {
-    AccessoryFactory,
-    TEMPERATURE_SENSOR_NAME,
-    TemperatureSensorController,
-    WindowCoveringController
-} from './accessory';
+import { API, APIEvent, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, } from 'homebridge';
+import { AccessoryFactory } from './accessory';
 import { Client } from './api';
-import Timeout = NodeJS.Timeout;
+import { BridgeFactory, BridgeInterface } from './bridge';
 
 export const PLUGIN_IDENTIFIER = "my-gekko";
 export const PLATFORM_NAME = "myGEKKO";
@@ -22,10 +9,10 @@ export const PLATFORM_NAME = "myGEKKO";
 export class Platform implements DynamicPlatformPlugin {
 
     private _accessoryFactory?: AccessoryFactory;
+    private _bridgeFactory?: BridgeFactory;
     private _client?: Client;
 
-    private readonly watchers: Timeout[] = [];
-    private readonly accessories: PlatformAccessory[] = [];
+    private bridges: BridgeInterface[] = [];
 
     constructor(public readonly log: Logging, public readonly config: PlatformConfig, public readonly api: API) {
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
@@ -37,7 +24,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         /*
          * When this event is fired, Homebridge restored all cached accessories from disk and did call their respective
-         * `configureAccessory` method for all of them. Dynamic Platform plugins should only register new accessories
+         * `configureAccessory` method for all of them. Dynamic Platform plugins should only activate new accessories
          * after this event was fired, in order to ensure they weren't added to Homebridge already.
          * This event can also be used to start discovery of new accessories.
          */
@@ -52,6 +39,14 @@ export class Platform implements DynamicPlatformPlugin {
         return this._accessoryFactory;
     }
 
+    get bridgeFactory(): BridgeFactory {
+        if (this._bridgeFactory === undefined) {
+            this._bridgeFactory = new BridgeFactory(this);
+        }
+
+        return this._bridgeFactory;
+    }
+
     get client(): Client {
         if (this._client === undefined) {
             this._client = new Client({
@@ -63,6 +58,10 @@ export class Platform implements DynamicPlatformPlugin {
         }
 
         return this._client;
+    }
+
+    get accessories(): PlatformAccessory[] {
+        return this.bridges.map((bridge) => bridge.accessory);
     }
 
     onFinishedLaunching(): void {
@@ -82,7 +81,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         return Promise
             .all([
-                this.discoverMeteoAccessories(),
+                this.discoverTemperatureSensorAccessories(),
                 this.discoverWindowCoveringAccessories()
             ])
             .then((list) => {
@@ -90,7 +89,7 @@ export class Platform implements DynamicPlatformPlugin {
             });
     }
 
-    discoverMeteoAccessories(): Promise<PlatformAccessory[]> {
+    discoverTemperatureSensorAccessories(): Promise<PlatformAccessory[]> {
         return this.client.getMeteo()
             .then((meteo) => {
                 const accessories = [];
@@ -110,7 +109,7 @@ export class Platform implements DynamicPlatformPlugin {
     }
 
     /**
-     * Configure and register accessories
+     * Configure and activate accessories
      *
      * @param accessories
      */
@@ -137,48 +136,26 @@ export class Platform implements DynamicPlatformPlugin {
      * @param {PlatformAccessory} accessory which needs to be configured
      */
     configureAccessory(accessory: PlatformAccessory): void {
-        switch (accessory.category) {
-            case Categories.WINDOW_COVERING:
-                this.configureWindowCoveringAccessory(accessory);
-                break;
+        let bridge;
+
+        try {
+            bridge = this.bridgeFactory.createBridge(accessory);
+        } catch (error) {
+            this.log.error(error);
+            return;
         }
 
-        if (accessory.category === Categories.OTHER) {
-            if (accessory.displayName === TEMPERATURE_SENSOR_NAME) {
-                this.configureTemperatureSensorAccessory(accessory);
-            }
-        }
-
-        this.accessories.push(accessory);
-    }
-
-    configureTemperatureSensorAccessory(accessory: PlatformAccessory): void {
-        const controller = new TemperatureSensorController(this, accessory);
-
-        controller.register()
-            .then((watcher) => {
-                this.watchers.push(watcher);
-            })
+        bridge.activate()
             .catch(this.log.error);
-    }
 
-    configureWindowCoveringAccessory(accessory: PlatformAccessory): void {
-        const controller = new WindowCoveringController(this, accessory);
-
-        controller.register()
-            .then((watcher) => {
-                this.watchers.push(watcher);
-            })
-            .catch(this.log.error);
+        this.bridges.push(bridge);
     }
 
     removeAccessories() {
         this.log('Removing accessories');
 
-        this.watchers.forEach(clearInterval);
-        this.watchers.splice(0, this.watchers.length); // clear out the array
-
+        this.bridges.forEach((bridge) => bridge.arrest());
         this.api.unregisterPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, this.accessories);
-        this.accessories.splice(0, this.accessories.length); // clear out the array
+        this.bridges.splice(0, this.bridges.length); // clear out the array
     }
 }

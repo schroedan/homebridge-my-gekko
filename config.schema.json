@@ -40,6 +40,23 @@
       "debug": {
         "title": "Enable debug mode",
         "type": "boolean"
+      },
+      "names": {
+        "title": "Display names of unnamed accessories",
+        "type": "object",
+        "properties": {
+          "meteo": {
+            "title": "Names of meteo accessories",
+            "type": "object",
+            "properties": {
+              "temperature": {
+                "title": "Name of the temperature sensor",
+                "type": "string",
+                "placeholder": "Temperature"
+              }
+            }
+          }
+        }
       }
     }
   },

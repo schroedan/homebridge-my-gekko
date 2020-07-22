@@ -8,13 +8,15 @@ import {
 } from 'homebridge';
 import { Blind, BlindState, BlindSumState } from '../api';
 import { Platform } from '../platform';
+import { BridgeInterface } from './bridge-interface';
 import Timeout = NodeJS.Timeout;
 
-export class WindowCoveringController {
+export class WindowCovering implements BridgeInterface {
 
+    private _watcher?: Timeout;
     private _targetPositionAllocator?: Timeout;
 
-    constructor(private readonly platform: Platform, private readonly accessory: PlatformAccessory) {
+    constructor(private readonly platform: Platform, public readonly accessory: PlatformAccessory) {
     }
 
     getBlind(): Promise<Blind> {
@@ -41,7 +43,7 @@ export class WindowCoveringController {
         });
     }
 
-    async updateDisplayName(): Promise<void> {
+    async updateName(): Promise<void> {
         const blind = await this.getBlind();
         const service = await this.getService();
 
@@ -118,13 +120,14 @@ export class WindowCoveringController {
     async update(): Promise<void> {
         this.platform.log('Updating window covering %s', this.accessory.displayName);
 
-        await this.updateDisplayName();
+        await this.updateName();
         await this.updateCurrentPosition();
         await this.updatePositionState();
         await this.updateObstructionDetected();
     }
 
-    async register(): Promise<Timeout> {
+    async activate(): Promise<void> {
+        await this.arrest();
         await this.update();
 
         const service = await this.getService();
@@ -142,7 +145,15 @@ export class WindowCoveringController {
         service.getCharacteristic(this.platform.api.hap.Characteristic.PositionState)
             .on(CharacteristicEventTypes.GET, this.onGetPositionState.bind(this));
 
-        return setInterval(this.update.bind(this), (this.platform.config.interval ?? 60) * 1000);
+        this._watcher = setInterval(this.update.bind(this), (this.platform.config.interval ?? 60) * 1000);
+    }
+
+    async arrest(): Promise<void> {
+        if (this._watcher === undefined) {
+            return;
+        }
+
+        clearInterval(this._watcher);
     }
 
     onGetCurrentPosition(callback: CharacteristicGetCallback): void {

@@ -33,7 +33,12 @@ Add platform to `config.json`, for configuration see below.
       "ttl": 1,
       "interval": 60,
       "delay": 500,
-      "debug": false
+      "debug": false,
+      "names": {
+        "meteo": {
+          "temperature": "Temperature"
+        }
+      } 
     }
   ]
 }
@@ -43,6 +48,8 @@ The `host` address can be the IP or the hostname of your myGEKKO. Please ensure 
 The `username` and `password` must be defined in the local QueryAPI settings of your myGEKKO.
 
 Feel free to adjust the options for client cache TTL (`ttl`), update interval (`interval`) and allocation delay (`delay`).
+
+Some names for unnamed accessories (e.g. temperature sensor) can be defined via the `names` object.
 
 ## Debugging
 

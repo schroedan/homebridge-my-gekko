@@ -1,11 +1,14 @@
 import { CharacteristicEventTypes, CharacteristicGetCallback, PlatformAccessory, Service } from 'homebridge';
 import { Meteo } from '../api';
 import { Platform } from '../platform';
+import { BridgeInterface } from './bridge-interface';
 import Timeout = NodeJS.Timeout;
 
-export class TemperatureSensorController {
+export class TemperatureSensor implements BridgeInterface {
 
-    constructor(private readonly platform: Platform, private readonly accessory: PlatformAccessory) {
+    private _watcher?: Timeout;
+
+    constructor(private readonly platform: Platform, public readonly accessory: PlatformAccessory) {
     }
 
     getMeteo(): Promise<Meteo> {
@@ -32,6 +35,15 @@ export class TemperatureSensorController {
         });
     }
 
+    async updateName(): Promise<void> {
+        const name = this.platform.config.names?.meteo?.temperature ?? 'Temperature';
+        const service = await this.getService();
+
+        this.accessory.displayName = name;
+
+        service.updateCharacteristic(this.platform.api.hap.Characteristic.Name, this.accessory.displayName);
+    }
+
     async getCurrentTemperature(): Promise<number> {
         const service = await this.getService();
         const characteristic = service.getCharacteristic(this.platform.api.hap.Characteristic.CurrentTemperature);
@@ -50,10 +62,12 @@ export class TemperatureSensorController {
     async update(): Promise<void> {
         this.platform.log('Updating temperature sensor %s', this.accessory.displayName);
 
+        await this.updateName();
         await this.updateCurrentTemperature();
     }
 
-    async register(): Promise<Timeout> {
+    async activate(): Promise<void> {
+        await this.arrest();
         await this.update();
 
         const service = await this.getService();
@@ -61,7 +75,15 @@ export class TemperatureSensorController {
         service.getCharacteristic(this.platform.api.hap.Characteristic.CurrentTemperature)
             .on(CharacteristicEventTypes.GET, this.onGetCurrentTemperature.bind(this));
 
-        return setInterval(this.update.bind(this), (this.platform.config.interval ?? 60) * 1000);
+        this._watcher = setInterval(this.update.bind(this), (this.platform.config.interval ?? 60) * 1000);
+    }
+
+    async arrest(): Promise<void> {
+        if (this._watcher === undefined) {
+            return;
+        }
+
+        clearInterval(this._watcher);
     }
 
     onGetCurrentTemperature(callback: CharacteristicGetCallback): void {
