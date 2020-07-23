@@ -1,6 +1,6 @@
 import { PlatformAccessory } from 'homebridge';
 
-export interface BridgeInterface {
+export interface DeviceInterface {
 
     readonly accessory: PlatformAccessory;
 

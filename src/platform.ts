@@ -1,20 +1,32 @@
-import { API, APIEvent, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, } from 'homebridge';
-import { AccessoryFactory } from './accessory';
+import {
+    API,
+    APIEvent,
+    Categories,
+    DynamicPlatformPlugin,
+    Logging,
+    PlatformAccessory,
+    PlatformConfig
+} from 'homebridge';
+import { AccessoryFactory, AccessoryType } from './accessory-factory';
 import { Client } from './api';
-import { BridgeFactory, BridgeInterface } from './bridge';
+import { DeviceInterface, WeatherStation, WindowCovering } from './device';
+import Timeout = NodeJS.Timeout;
 
 export const PLUGIN_IDENTIFIER = "my-gekko";
+
 export const PLATFORM_NAME = "myGEKKO";
 
 export class Platform implements DynamicPlatformPlugin {
 
-    private _accessoryFactory?: AccessoryFactory;
-    private _bridgeFactory?: BridgeFactory;
     private _client?: Client;
+    private _watcher?: Timeout;
 
-    private bridges: BridgeInterface[] = [];
+    private readonly factory: AccessoryFactory;
+    private readonly devices: DeviceInterface[] = [];
 
     constructor(public readonly log: Logging, public readonly config: PlatformConfig, public readonly api: API) {
+        this.factory = new AccessoryFactory(this);
+
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
             this.log.error('Platform config missing - please check the config file');
             return;
@@ -23,28 +35,18 @@ export class Platform implements DynamicPlatformPlugin {
         this.log('Platform finished initializing');
 
         /*
-         * When this event is fired, Homebridge restored all cached accessories from disk and did call their respective
+         * When this event is fired, homebridge restored all cached accessories from disk and did call their respective
          * `configureAccessory` method for all of them. Dynamic Platform plugins should only activate new accessories
-         * after this event was fired, in order to ensure they weren't added to Homebridge already.
+         * after this event was fired, in order to ensure they weren't added to homebridge already.
          * This event can also be used to start discovery of new accessories.
          */
         this.api.on(APIEvent.DID_FINISH_LAUNCHING, this.onFinishedLaunching.bind(this));
-    }
 
-    get accessoryFactory(): AccessoryFactory {
-        if (this._accessoryFactory === undefined) {
-            this._accessoryFactory = new AccessoryFactory(this);
-        }
-
-        return this._accessoryFactory;
-    }
-
-    get bridgeFactory(): BridgeFactory {
-        if (this._bridgeFactory === undefined) {
-            this._bridgeFactory = new BridgeFactory(this);
-        }
-
-        return this._bridgeFactory;
+        /**
+         * This event is fired when homebridge got shutdown. This could be a regular shutdown or a unexpected crash.
+         * At this stage all Accessories are already unpublished and all PlatformAccessories are already saved to disk!
+         */
+        this.api.on(APIEvent.SHUTDOWN, this.onShutdown.bind(this));
     }
 
     get client(): Client {
@@ -61,19 +63,34 @@ export class Platform implements DynamicPlatformPlugin {
     }
 
     get accessories(): PlatformAccessory[] {
-        return this.bridges.map((bridge) => bridge.accessory);
+        return this.devices.map((device) => device.accessory);
     }
 
     onFinishedLaunching(): void {
         this.log('Platform finished launching');
 
-        this.config.debug && this.removeAccessories();
+        this.config.removeDevices && this.removeDevices();
 
         this.discoverAccessories()
             .then((accessories: PlatformAccessory[]) => {
                 this.addAccessories(accessories);
+                this.updateDevices();
+
+                if (this._watcher !== undefined) {
+                    clearInterval(this._watcher);
+                }
+                this._watcher = setInterval(this.updateDevices.bind(this), (this.config.interval ?? 60) * 1000);
+                this._watcher.unref(); // unblock
             })
             .catch(this.log.error);
+    }
+
+    onShutdown(): void {
+        if (this._watcher !== undefined) {
+            clearInterval(this._watcher);
+        }
+
+        this.devices.forEach((device) => device.arrest());
     }
 
     discoverAccessories(): Promise<PlatformAccessory[]> {
@@ -81,7 +98,7 @@ export class Platform implements DynamicPlatformPlugin {
 
         return Promise
             .all([
-                this.discoverTemperatureSensorAccessories(),
+                this.discoverWeatherStationAccessories(),
                 this.discoverWindowCoveringAccessories()
             ])
             .then((list) => {
@@ -89,12 +106,13 @@ export class Platform implements DynamicPlatformPlugin {
             });
     }
 
-    discoverTemperatureSensorAccessories(): Promise<PlatformAccessory[]> {
+    discoverWeatherStationAccessories(): Promise<PlatformAccessory[]> {
+        const accessories: PlatformAccessory[] = [];
+
         return this.client.getMeteo()
             .then((meteo) => {
-                const accessories = [];
                 if (meteo !== undefined) {
-                    accessories.push(this.accessoryFactory.createTemperatureSensorAccessory(meteo));
+                    accessories.push(this.factory.createWeatherStationAccessory());
                 }
 
                 return accessories;
@@ -104,7 +122,7 @@ export class Platform implements DynamicPlatformPlugin {
     discoverWindowCoveringAccessories(): Promise<PlatformAccessory[]> {
         return this.client.getBlinds()
             .then((blinds) => blinds.map((blind) => {
-                return this.accessoryFactory.createWindowCoveringAccessory(blind);
+                return this.factory.createWindowCoveringAccessory(blind);
             }));
     }
 
@@ -136,26 +154,40 @@ export class Platform implements DynamicPlatformPlugin {
      * @param {PlatformAccessory} accessory which needs to be configured
      */
     configureAccessory(accessory: PlatformAccessory): void {
-        let bridge;
+        const device = this.createDevice(accessory);
+        if (device === undefined) {
+            this.log('Removing orphaned accessory %s', accessory.displayName);
 
-        try {
-            bridge = this.bridgeFactory.createBridge(accessory);
-        } catch (error) {
-            this.log.error(error);
+            this.api.unregisterPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, [accessory]);
             return;
         }
 
-        bridge.activate()
-            .catch(this.log.error);
-
-        this.bridges.push(bridge);
+        this.addDevice(device);
     }
 
-    removeAccessories() {
-        this.log('Removing accessories');
+    createDevice(accessory: PlatformAccessory): DeviceInterface | undefined {
+        switch (accessory.context.type) {
+            case Categories.WINDOW_COVERING:
+            case AccessoryType.WINDOW_COVERING:
+                return new WindowCovering(this, accessory);
+            case Categories.OTHER:
+            case AccessoryType.WEATHER_STATION:
+                return new WeatherStation(this, accessory);
+        }
+    }
 
-        this.bridges.forEach((bridge) => bridge.arrest());
+    addDevice(device: DeviceInterface): void {
+        device.activate().catch(this.log.error);
+        this.devices.push(device);
+    }
+
+    updateDevices(): void {
+        this.devices.forEach((device) => device.update().catch(this.log.error));
+    }
+
+    removeDevices(): void {
+        this.devices.forEach((device) => device.arrest().catch(this.log.error));
         this.api.unregisterPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, this.accessories);
-        this.bridges.splice(0, this.bridges.length); // clear out the array
+        this.devices.splice(0, this.devices.length); // clear out the array
     }
 }

@@ -33,12 +33,14 @@ Add platform to `config.json`, for configuration see below.
       "ttl": 1,
       "interval": 60,
       "delay": 500,
-      "debug": false,
       "names": {
-        "meteo": {
-          "temperature": "Temperature"
-        }
-      } 
+        "weather": "Weather",
+        "light": "Light",       
+        "humidity": "Humidity",
+        "temperature": "Temperature"
+      },
+      "removeDevices": false,
+      "debug": false
     }
   ]
 }
@@ -50,6 +52,8 @@ The `username` and `password` must be defined in the local QueryAPI settings of 
 Feel free to adjust the options for client cache TTL (`ttl`), update interval (`interval`) and allocation delay (`delay`).
 
 Some names for unnamed accessories (e.g. temperature sensor) can be defined via the `names` object.
+
+Set `"removeDevices": true` to remove all device before a discovery for new accessories starts after platform finished launching.
 
 ## Debugging
 
