@@ -24,15 +24,15 @@ export class AccessoryFactory {
     }
 
     createWeatherStationAccessory(): PlatformAccessory {
-        const name = this.config.names?.weather ?? 'Weather';
+        const name = this.config.names.weather;
         const uuid = this.hap.uuid.generate(`${PLUGIN_IDENTIFIER}/weather-station`);
         const accessory = new Accessory(name, uuid, Categories.OTHER);
 
         accessory.context.type = AccessoryType.WEATHER_STATION;
 
-        accessory.addService(this.hap.Service.LightSensor, this.config.names?.light ?? 'Light');
-        accessory.addService(this.hap.Service.HumiditySensor, this.config.names?.humidity ?? 'Humidity');
-        accessory.addService(this.hap.Service.TemperatureSensor, this.config.names?.temperature ?? 'Temperature');
+        accessory.addService(this.hap.Service.LightSensor, this.config.names.light);
+        accessory.addService(this.hap.Service.HumiditySensor, this.config.names.humidity);
+        accessory.addService(this.hap.Service.TemperatureSensor, this.config.names.temperature);
 
         return accessory;
     }

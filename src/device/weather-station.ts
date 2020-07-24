@@ -78,11 +78,11 @@ export class WeatherStation implements DeviceInterface {
         const humiditySensor = await this.getHumiditySensorService();
         const temperatureSensor = await this.getTemperatureSensorService();
 
-        this.accessory.displayName = this.config.names?.weather ?? 'Weather';
+        this.accessory.displayName = this.config.names.weather;
 
-        lightSensor.updateCharacteristic(this.hap.Characteristic.Name, this.config.names?.light ?? 'Light');
-        humiditySensor.updateCharacteristic(this.hap.Characteristic.Name, this.config.names?.humidity ?? 'Humidity');
-        temperatureSensor.updateCharacteristic(this.hap.Characteristic.Name, this.config.names?.temperature ?? 'Temperature');
+        lightSensor.updateCharacteristic(this.hap.Characteristic.Name, this.config.names.light);
+        humiditySensor.updateCharacteristic(this.hap.Characteristic.Name, this.config.names.humidity);
+        temperatureSensor.updateCharacteristic(this.hap.Characteristic.Name, this.config.names.temperature);
     }
 
     async getCurrentAmbientLightLevel(): Promise<number> {
@@ -147,6 +147,11 @@ export class WeatherStation implements DeviceInterface {
         const temperatureSensor = await this.getTemperatureSensorService();
 
         lightSensor.getCharacteristic(this.hap.Characteristic.CurrentAmbientLightLevel)
+            .setProps({
+                minValue: 0.000001,
+                maxValue: 100000,
+                minStep: 0.000001
+            })
             .on(CharacteristicEventTypes.GET, this.onCurrentAmbientLightLevel.bind(this));
 
         humiditySensor.getCharacteristic(this.hap.Characteristic.CurrentRelativeHumidity)

@@ -1,3 +1,4 @@
+import deepmerge from 'deepmerge';
 import {
     API,
     APIEvent,
@@ -18,14 +19,28 @@ export const PLATFORM_NAME = "myGEKKO";
 
 export class Platform implements DynamicPlatformPlugin {
 
+    public readonly config: PlatformConfig;
+
+    private readonly factory: AccessoryFactory = new AccessoryFactory(this);
+    private readonly devices: DeviceInterface[] = [];
+
     private _client?: Client;
     private _watcher?: Timeout;
 
-    private readonly factory: AccessoryFactory;
-    private readonly devices: DeviceInterface[] = [];
-
-    constructor(public readonly log: Logging, public readonly config: PlatformConfig, public readonly api: API) {
-        this.factory = new AccessoryFactory(this);
+    constructor(public readonly log: Logging, config: PlatformConfig, public readonly api: API) {
+        this.config = deepmerge({
+            ttl: 1,
+            interval: 60,
+            delay: 500,
+            names: {
+                weather: 'Weather',
+                light: 'Light',
+                humidity: 'Humidity',
+                temperature: 'Temperature'
+            },
+            removeDevices: false,
+            debug: false
+        }, config);
 
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
             this.log.error('Platform config missing - please check the config file');

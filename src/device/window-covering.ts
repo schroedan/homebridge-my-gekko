@@ -16,12 +16,12 @@ import Timeout = NodeJS.Timeout;
 
 export class WindowCovering implements DeviceInterface {
 
-    private _targetPositionAllocator?: Timeout;
-
     private readonly client: Client;
     private readonly log: Logging;
     private readonly config: PlatformConfig;
     private readonly hap: HAP;
+
+    private _targetPositionAllocator?: Timeout;
 
     constructor(platform: Platform, public readonly accessory: PlatformAccessory) {
         this.client = platform.client;
