@@ -94,10 +94,10 @@ export class WeatherStation implements DeviceInterface {
 
     async updateCurrentAmbientLightLevel(): Promise<void> {
         const meteo = await this.getMeteo();
-        const twilight = await meteo.getTwilight();
+        const brightness = await meteo.getBrightness();
         const service = await this.getHumiditySensorService();
 
-        service.updateCharacteristic(this.hap.Characteristic.CurrentAmbientLightLevel, twilight);
+        service.updateCharacteristic(this.hap.Characteristic.CurrentAmbientLightLevel, brightness);
     }
 
     async getCurrentRelativeHumidity(): Promise<number> {

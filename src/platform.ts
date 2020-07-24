@@ -21,8 +21,8 @@ export class Platform implements DynamicPlatformPlugin {
 
     public readonly config: PlatformConfig;
 
-    private readonly factory: AccessoryFactory = new AccessoryFactory(this);
-    private readonly devices: DeviceInterface[] = [];
+    private readonly factory: AccessoryFactory;
+    private readonly devices: DeviceInterface[];
 
     private _client?: Client;
     private _watcher?: Timeout;
@@ -41,6 +41,10 @@ export class Platform implements DynamicPlatformPlugin {
             removeDevices: false,
             debug: false
         }, config);
+
+        this.factory = new AccessoryFactory(this);
+
+        this.devices = [];
 
         if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
             this.log.error('Platform config missing - please check the config file');
