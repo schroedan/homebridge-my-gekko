@@ -2,13 +2,15 @@
 
 [![NPM Version](https://img.shields.io/npm/v/homebridge-my-gekko.svg)](https://www.npmjs.com/package/homebridge-my-gekko)
 [![NPM Downloads](https://img.shields.io/npm/dt/homebridge-my-gekko.svg)](https://www.npmjs.com/package/homebridge-my-gekko)
-[![Build Status](https://travis-ci.com/schroedan/homebridge-my-gekko.svg?branch=master)](https://travis-ci.com/schroedan/homebridge-my-gekko)
+[![Continuous Integration](https://img.shields.io/github/workflow/status/schroedan/homebridge-my-gekko/Continuous%20Integration)](https://github.com/schroedan/homebridge-my-gekko/actions/workflows/continuous-integration.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/schroedan/4136c781b460695ffcbf3dd43f5b82bc/raw/homebridge-my-gekko-coverage.json)](https://github.com/schroedan/homebridge-my-gekko/actions/workflows/continuous-integration.yml)
 
-myGEKKO platform plugin for Homebridge written in Typescript
+myGEKKO Platform Plugin for Homebridge
 
 This plugin exposes:
-* Blinds as window coverings
-* Meteo temperature as temperature sensor
+
+- Blinds as window coverings
+- Meteo temperature as temperature sensor
 
 ## Installation
 
@@ -26,34 +28,27 @@ Add platform to `config.json`, for configuration see below.
 {
   "platforms": [
     {
-      "platform": "myGEKKO",
+      "name": "myGEKKO",
       "host": "<host>",
       "username": "<username>",
       "password": "<password>",
+      "platform": "mygekko",
+      "blinds": true,
+      "meteo": true,
       "ttl": 1,
-      "interval": 60,
-      "delay": 500,
-      "names": {
-        "weather": "Weather",
-        "light": "Light",       
-        "humidity": "Humidity",
-        "temperature": "Temperature"
-      },
-      "removeDevices": false,
-      "debug": false
+      "interval": 3,
+      "delay": 500
     }
   ]
 }
 ```
 
-The `host` address can be the IP or the hostname of your myGEKKO. Please ensure that the local QueryAPI is enabled.
+Either the IP or the hostname of your myGEKKO can be configured as `host`. Please ensure that the local QueryAPI is enabled.
 The `username` and `password` must be defined in the local QueryAPI settings of your myGEKKO.
 
-Feel free to adjust the options for client cache TTL (`ttl`), update interval (`interval`) and allocation delay (`delay`).
+The discovery of blind and/or meteo accessories can be disabled by setting the `blinds` and/or `meteo` options to `false`.
 
-Some names for unnamed accessories (e.g. temperature sensor) can be defined via the `names` object.
-
-Set `"removeDevices": true` to remove all device before a discovery for new accessories starts after platform finished launching.
+Feel free to adjust the options for client cache TTL (`ttl` in seconds), update interval (`interval` in seconds) and allocation delay (`delay` in milliseconds).
 
 ## Debugging
 
@@ -61,9 +56,7 @@ If you experience problems with this plugin please provide a Homebridge logfile 
 
     homebridge -D
 
-For even more detailed logs set `"debug": true` in the platform configuration.
-
 ## Acknowledgements
 
-- Original non-working [Homebridge platform for myGEKKO](https://github.com/isnogudus/homebridge-mygekko)
-- Platform plugin implementation inspired by [dynamic platform example in Typescript](https://github.com/homebridge/homebridge-examples)
+- Original non-working [Homebridge Platform for myGEKKO](https://github.com/isnogudus/homebridge-mygekko)
+- Platform plugin implementation inspired by [Dynamic Platform Plugin](https://github.com/homebridge/homebridge-examples) example

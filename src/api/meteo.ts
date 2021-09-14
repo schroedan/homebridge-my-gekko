@@ -1,47 +1,114 @@
-import { Client } from './client';
-import { Url } from './url';
+import { API } from './api';
+
+export type MeteoResourceValue = {
+  value: 'Act.Value';
+  type: 'REAL';
+  unit: string;
+  permission: 'READ';
+  index: number;
+};
+
+export type MeteoResource = {
+  twilight: MeteoResourceValue;
+  humidity: MeteoResourceValue;
+  brightness: MeteoResourceValue;
+  brightnessw: MeteoResourceValue;
+  brightnesso: MeteoResourceValue;
+  wind: MeteoResourceValue;
+  temperature: MeteoResourceValue;
+  rain: MeteoResourceValue;
+};
+
+export type MeteoStatusValue = {
+  value: string;
+};
+
+export type MeteoStatus = {
+  twilight: MeteoStatusValue;
+  humidity: MeteoStatusValue;
+  brightness: MeteoStatusValue;
+  brightnessw: MeteoStatusValue;
+  brightnesso: MeteoStatusValue;
+  wind: MeteoStatusValue;
+  temperature: MeteoStatusValue;
+  rain: MeteoStatusValue;
+};
+
+export type MeteoDataValue = {
+  value: number;
+  unit: string;
+};
 
 export class Meteo {
+  constructor(readonly api: API) {}
 
-    public readonly apiUrl: Url;
+  protected async getResource(): Promise<MeteoResource> {
+    const resources = await this.api.getResources();
 
-    constructor(private readonly client: Client) {
-        this.apiUrl = this.client.apiUrl.withPathname(`${this.client.apiUrl.pathname}/var/globals/meteo`)
+    if (resources.globals.meteo === undefined) {
+      throw new Error('Invalid resource.');
     }
 
-    async getTwilight(): Promise<number> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/status`);
-        const data = await this.client.sendCachedRequest(url);
+    return resources.globals.meteo;
+  }
 
-        return parseFloat(data.twilight.value);
+  protected async getStatus(): Promise<MeteoStatus> {
+    const status = await this.api.getStatus();
+
+    if (status.globals.meteo === undefined) {
+      throw new Error('Invalid status.');
     }
 
-    async getHumidity(): Promise<number> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/status`);
-        const data = await this.client.sendCachedRequest(url);
+    return status.globals.meteo;
+  }
 
-        return parseFloat(data.humidity.value);
-    }
+  async getTwilight(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
 
+    return {
+      value: Number(status.twilight.value),
+      unit: resource.twilight.unit,
+    };
+  }
 
-    async getBrightness(): Promise<number> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/status`);
-        const data = await this.client.sendCachedRequest(url);
+  async getHumidity(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
 
-        return parseFloat(data.brightness.value);
-    }
+    return {
+      value: Number(status.humidity.value),
+      unit: resource.humidity.unit,
+    };
+  }
 
-    async getWind(): Promise<number> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/status`);
-        const data = await this.client.sendCachedRequest(url);
+  async getBrightness(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
 
-        return parseFloat(data.wind.value);
-    }
+    return {
+      value: Number(status.brightness.value),
+      unit: resource.brightness.unit,
+    };
+  }
 
-    async getTemperature(): Promise<number> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/status`);
-        const data = await this.client.sendCachedRequest(url);
+  async getWind(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
 
-        return parseFloat(data.temperature.value);
-    }
+    return {
+      value: Number(status.wind.value),
+      unit: resource.wind.unit,
+    };
+  }
+
+  async getTemperature(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
+
+    return {
+      value: Number(status.temperature.value),
+      unit: resource.temperature.unit,
+    };
+  }
 }

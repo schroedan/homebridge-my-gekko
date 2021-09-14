@@ -1,112 +1,156 @@
-import { Client } from './client';
-import { Url } from './url';
+import { API } from './api';
 
-export declare const enum BlindState {
-    HOLD_DOWN = '-2',
-    DOWN = '-1',
-    STOP = '0',
-    UP = '1',
-    HOLD_UP = '2',
+export type BlindResource = {
+  name: string;
+  page: string;
+  sumstate: {
+    value: string;
+    type: 'STRING';
+    permission: 'READ';
+    index: number;
+  };
+  scmd: {
+    value: string;
+    type: 'STRING';
+    permission: 'WRITE';
+    index: number;
+  };
+};
+
+export type BlindStatusValue = {
+  value: string;
+};
+
+export type BlindStatus = {
+  sumstate: BlindStatusValue;
+};
+
+export enum BlindState {
+  HOLD_DOWN = '-2',
+  DOWN = '-1',
+  STOP = '0',
+  UP = '1',
+  HOLD_UP = '2',
 }
 
-export declare const enum BlindSumState {
-    OK = '0',
-    MANUAL_OFF = '1',
-    MANUAL_ON = '2',
-    LOCKED = '3',
-    ALARM = '4',
+export enum BlindSumState {
+  OK = '0',
+  MANUAL_OFF = '1',
+  MANUAL_ON = '2',
+  LOCKED = '3',
+  ALARM = '4',
 }
 
 export class Blind {
+  constructor(readonly api: API, readonly key: string) {}
 
-    public readonly apiUrl: Url;
+  protected async getResource(): Promise<BlindResource> {
+    const resources = await this.api.getResources();
 
-    constructor(private readonly client: Client, public readonly key: string, public readonly name: string) {
-        this.apiUrl = this.client.apiUrl.withPathname(`${this.client.apiUrl.pathname}/var/blinds`)
+    if (
+      resources.blinds === undefined ||
+      resources.blinds[this.key] === undefined
+    ) {
+      throw new Error('Invalid resource.');
     }
 
-    private async getStatus(): Promise<string> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/status`);
-        const data = await this.client.sendCachedRequest(url);
+    return resources.blinds[this.key];
+  }
 
-        return data[this.key].sumstate.value;
+  protected async getStatus(): Promise<BlindStatus> {
+    const status = await this.api.getStatus();
+
+    if (status.blinds === undefined || status.blinds[this.key] === undefined) {
+      throw new Error('Invalid status.');
     }
 
-    async getState(): Promise<BlindState> {
-        const status = await this.getStatus();
+    return status.blinds[this.key];
+  }
 
-        return status.split(';')[0] as BlindState;
-    }
+  protected async setStatus(value: string): Promise<void> {
+    const request = this.api.client
+      .writeRequest()
+      .withPath(`/var/blinds/${this.key}/scmd/set`)
+      .withParams([{ name: 'value', value }]);
 
-    async setState(state: BlindState): Promise<void> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/${this.key}/scmd/set`)
-            .withSearchParam('value', state);
+    await this.api.client.query(request);
+  }
 
-        return await this.client.sendRequest(url);
-    }
+  async getName(): Promise<string> {
+    const resource = await this.getResource();
 
-    async holdDown(): Promise<void> {
-        return await this.setState(BlindState.HOLD_DOWN);
-    }
+    return resource.name;
+  }
 
-    async down(): Promise<void> {
-        return await this.setState(BlindState.DOWN);
-    }
+  async getPage(): Promise<string> {
+    const resource = await this.getResource();
 
-    async stop(): Promise<void> {
-        return await this.setState(BlindState.STOP);
-    }
+    return resource.page;
+  }
 
-    async up(): Promise<void> {
-        return await this.setState(BlindState.UP);
-    }
+  async getState(): Promise<BlindState> {
+    const status = await this.getStatus();
 
-    async holdUp(): Promise<void> {
-        return await this.setState(BlindState.HOLD_UP);
-    }
+    return status.sumstate.value.split(';')[0] as BlindState;
+  }
 
-    async toggle(): Promise<void> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/${this.key}/scmd/set`)
-            .withSearchParam('value', 'T');
+  async setState(state: BlindState): Promise<void> {
+    await this.setStatus(state);
+  }
 
-        return await this.client.sendRequest(url);
-    }
+  async holdDown(): Promise<void> {
+    return await this.setState(BlindState.HOLD_DOWN);
+  }
 
-    async getPosition(): Promise<number> {
-        const status = await this.getStatus();
+  async down(): Promise<void> {
+    return await this.setState(BlindState.DOWN);
+  }
 
-        return parseInt(status.split(';')[1]);
-    }
+  async stop(): Promise<void> {
+    return await this.setState(BlindState.STOP);
+  }
 
-    async setPosition(position: number): Promise<void> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/${this.key}/scmd/set`)
-            .withSearchParam('value', `P${position.toFixed(2)}`);
+  async up(): Promise<void> {
+    return await this.setState(BlindState.UP);
+  }
 
-        return await this.client.sendRequest(url);
-    }
+  async holdUp(): Promise<void> {
+    return await this.setState(BlindState.HOLD_UP);
+  }
 
-    async getAngle(): Promise<number> {
-        const status = await this.getStatus();
+  async toggle(): Promise<void> {
+    await this.setStatus('T');
+  }
 
-        return parseInt(status.split(';')[2]);
-    }
+  async getPosition(): Promise<number> {
+    const status = await this.getStatus();
 
-    async setAngle(angle: number): Promise<void> {
-        const url = this.apiUrl.withPathname(`${this.apiUrl.pathname}/${this.key}/scmd/set`)
-            .withSearchParam('value', `S${angle.toFixed(0)}`);
+    return Number(status.sumstate.value.split(';')[1]);
+  }
 
-        return await this.client.sendRequest(url);
-    }
+  async setPosition(position: number): Promise<void> {
+    await this.setStatus(`P${position.toFixed(2)}`);
+  }
 
-    async getSumState(): Promise<BlindSumState> {
-        const status = await this.getStatus();
+  async getAngle(): Promise<number> {
+    const status = await this.getStatus();
 
-        return status.split(';')[3] as BlindSumState;
-    }
+    return Number(status.sumstate.value.split(';')[2]);
+  }
 
-    async getSlatRotationArea(): Promise<number> {
-        const status = await this.getStatus();
+  async setAngle(angle: number): Promise<void> {
+    await this.setStatus(`S${angle.toFixed(0)}`);
+  }
 
-        return parseInt(status.split(';')[4]);
-    }
+  async getSumState(): Promise<BlindSumState> {
+    const status = await this.getStatus();
+
+    return status.sumstate.value.split(';')[3] as BlindSumState;
+  }
+
+  async getSlatRotationArea(): Promise<number> {
+    const status = await this.getStatus();
+
+    return Number(status.sumstate.value.split(';')[4]);
+  }
 }

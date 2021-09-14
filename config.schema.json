@@ -1,25 +1,46 @@
 {
-  "pluginAlias": "myGEKKO",
+  "pluginAlias": "homebridge-my-gekko",
   "pluginType": "platform",
-  "singular": false,
-  "headerDisplay": null,
-  "footerDisplay": null,
+  "singular": true,
+  "headerDisplay": "myGEKKO Platform Plugin for Homebridge",
+  "footerDisplay": "For a detailed description, see the [README.md](http://github.com/schroedan/homebridge-my-gekko#readme) file.",
   "schema": {
     "type": "object",
     "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "myGEKKO",
+        "required": true
+      },
       "host": {
         "title": "QueryAPI host",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The host of your myGEKKO"
       },
       "username": {
         "title": "QueryAPI username",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The username of your QueryAPI user"
       },
       "password": {
         "title": "QueryAPI password",
         "type": "string",
+        "required": true,
+        "description": "The password of your QueryAPI user"
+      },
+      "blinds": {
+        "title": "Discover blind accessories",
+        "type": "boolean",
+        "default": true,
+        "required": true
+      },
+      "meteo": {
+        "title": "Discover meteo accessories",
+        "type": "boolean",
+        "default": true,
         "required": true
       },
       "ttl": {
@@ -30,46 +51,12 @@
       "interval": {
         "title": "Update interval in seconds",
         "type": "number",
-        "placeholder": 60
+        "placeholder": 3
       },
       "delay": {
         "title": "Allocation delay in ms",
         "type": "number",
         "placeholder": 500
-      },
-      "names": {
-        "title": "Display names of unnamed accessories",
-        "type": "object",
-        "properties": {
-          "weather": {
-            "title": "Name of the weather station",
-            "type": "string",
-            "placeholder": "Weather"
-          },
-          "light": {
-            "title": "Name of the light sensor",
-            "type": "string",
-            "placeholder": "Light"
-          },
-          "humidity": {
-            "title": "Name of the humidity sensor",
-            "type": "string",
-            "placeholder": "Humidity"
-          },
-          "temperature": {
-            "title": "Name of the temperature sensor",
-            "type": "string",
-            "placeholder": "Temperature"
-          }
-        }
-      },
-      "removeDevices": {
-        "title": "Remove devices before discovery",
-        "type": "boolean"
-      },
-      "debug": {
-        "title": "Enable debug mode",
-        "type": "boolean"
       }
     }
   },

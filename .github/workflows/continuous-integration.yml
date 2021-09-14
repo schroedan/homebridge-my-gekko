@@ -1,0 +1,81 @@
+name: 'Continuous Integration'
+
+on:
+  push:
+    branches: [master]
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+          - 10.x
+          - 12.x
+          - 14.x
+          - 16.x
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          cache: yarn
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --silent
+
+      - name: Lint source code
+        run: yarn lint
+
+      - name: Run tests
+        run: |
+          yarn test --silent --ci --coverage
+          echo "COVERAGE=$(jq .total.lines.pct coverage/coverage-summary.json)" >> $GITHUB_ENV
+
+      - name: Update coverage badge
+        uses: schneegans/dynamic-badges-action@v1.1.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 4136c781b460695ffcbf3dd43f5b82bc
+          filename: homebridge-my-gekko-coverage.json
+          label: coverage
+          message: ${{ env.COVERAGE }}%
+          color: green
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+
+    name: Publish
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_VERSION: 16.x
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
+        with:
+          cache: yarn
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --silent
+
+      - name: Publish package
+        run: yarn publish

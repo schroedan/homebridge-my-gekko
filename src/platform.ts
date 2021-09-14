@@ -1,212 +1,255 @@
-import deepmerge from 'deepmerge';
+import { EventEmitter } from 'events';
 import {
-    API,
-    APIEvent,
-    Categories,
-    DynamicPlatformPlugin,
-    Logging,
-    PlatformAccessory,
-    PlatformConfig
+  API,
+  APIEvent,
+  Categories,
+  DynamicPlatformPlugin,
+  Logging,
+  PlatformAccessory,
+  PlatformConfig,
 } from 'homebridge';
-import { AccessoryFactory, AccessoryType } from './accessory-factory';
-import { Client } from './api';
-import { DeviceInterface, WeatherStation, WindowCovering } from './device';
-import Timeout = NodeJS.Timeout;
+import { Container } from './container';
 
-export const PLUGIN_IDENTIFIER = "my-gekko";
+export const PLUGIN_IDENTIFIER = 'homebridge-my-gekko';
 
-export const PLATFORM_NAME = "myGEKKO";
+export const PLATFORM_NAME = 'mygekko';
 
-export class Platform implements DynamicPlatformPlugin {
+export const enum PlatformEventTypes {
+  /**
+   * This event is fired in the configured interval.
+   * At this stage all PlatformAccessories are already registered and ready!
+   */
+  HEARTBEAT = 'heartbeat',
+  /**
+   * This event is fired when homebridge got shutdown. This could be a regular shutdown or a unexpected crash.
+   * At this stage all Accessories are already unpublished and all PlatformAccessories are already saved to disk!
+   */
+  SHUTDOWN = 'shutdown',
+}
 
-    public readonly config: PlatformConfig;
+export class Platform extends EventEmitter implements DynamicPlatformPlugin {
+  private _accessories: PlatformAccessory[] = [];
+  private _container?: Container;
 
-    private readonly factory: AccessoryFactory;
-    private readonly devices: DeviceInterface[];
-
-    private _client?: Client;
-    private _watcher?: Timeout;
-
-    constructor(public readonly log: Logging, config: PlatformConfig, public readonly api: API) {
-        this.config = deepmerge({
-            ttl: 1,
-            interval: 60,
-            delay: 500,
-            names: {
-                weather: 'Weather',
-                light: 'Light',
-                humidity: 'Humidity',
-                temperature: 'Temperature'
-            },
-            removeDevices: false,
-            debug: false
-        }, config);
-
-        this.factory = new AccessoryFactory(this);
-
-        this.devices = [];
-
-        if (this.config.host === undefined || this.config.username === undefined || this.config.password === undefined) {
-            this.log.error('Platform config missing - please check the config file');
-            return;
-        }
-
-        this.log('Platform finished initializing');
-
-        /*
-         * When this event is fired, homebridge restored all cached accessories from disk and did call their respective
-         * `configureAccessory` method for all of them. Dynamic Platform plugins should only activate new accessories
-         * after this event was fired, in order to ensure they weren't added to homebridge already.
-         * This event can also be used to start discovery of new accessories.
-         */
-        this.api.on(APIEvent.DID_FINISH_LAUNCHING, this.onFinishedLaunching.bind(this));
-
-        /**
-         * This event is fired when homebridge got shutdown. This could be a regular shutdown or a unexpected crash.
-         * At this stage all Accessories are already unpublished and all PlatformAccessories are already saved to disk!
-         */
-        this.api.on(APIEvent.SHUTDOWN, this.onShutdown.bind(this));
+  get container(): Container {
+    if (this._container === undefined) {
+      this._container = new Container(this);
     }
 
-    get client(): Client {
-        if (this._client === undefined) {
-            this._client = new Client({
-                host: this.config.host,
-                username: this.config.username,
-                password: this.config.password,
-                ttl: this.config.ttl
-            });
-        }
+    return this._container;
+  }
 
-        return this._client;
+  constructor(
+    readonly log: Logging,
+    readonly config: PlatformConfig,
+    readonly api: API,
+  ) {
+    super();
+
+    this.setMaxListeners(0);
+
+    try {
+      this.validateConfig();
+    } catch (error) {
+      this.log.error(error.message);
+      return;
     }
 
-    get accessories(): PlatformAccessory[] {
-        return this.devices.map((device) => device.accessory);
-    }
+    this.registerListeners();
 
-    onFinishedLaunching(): void {
-        this.log('Platform finished launching');
+    this.log.info('Platform finished initializing');
+  }
 
-        this.config.removeDevices && this.removeDevices();
+  registerListeners(): void {
+    this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
+      this.container.heartbeat.set(() => {
+        this.signalHeartbeat();
+      });
+    });
 
-        this.discoverAccessories()
-            .then((accessories: PlatformAccessory[]) => {
-                this.addAccessories(accessories);
-                this.updateDevices();
+    this.api.on(APIEvent.SHUTDOWN, () => {
+      this.signalShutdown();
+    });
 
-                if (this._watcher !== undefined) {
-                    clearInterval(this._watcher);
-                }
-                this._watcher = setInterval(this.updateDevices.bind(this), (this.config.interval ?? 60) * 1000);
-                this._watcher.unref(); // unblock
-            })
-            .catch(this.log.error);
-    }
-
-    onShutdown(): void {
-        if (this._watcher !== undefined) {
-            clearInterval(this._watcher);
-        }
-
-        this.devices.forEach((device) => device.arrest());
-    }
-
-    discoverAccessories(): Promise<PlatformAccessory[]> {
-        this.log('Discovering accessories');
-
-        return Promise
-            .all([
-                this.discoverWeatherStationAccessories(),
-                this.discoverWindowCoveringAccessories()
-            ])
-            .then((list) => {
-                return list.reduce((previous, current) => previous.concat(current), [])
-            });
-    }
-
-    discoverWeatherStationAccessories(): Promise<PlatformAccessory[]> {
-        const accessories: PlatformAccessory[] = [];
-
-        return this.client.getMeteo()
-            .then((meteo) => {
-                if (meteo !== undefined) {
-                    accessories.push(this.factory.createWeatherStationAccessory());
-                }
-
-                return accessories;
-            });
-    }
-
-    discoverWindowCoveringAccessories(): Promise<PlatformAccessory[]> {
-        return this.client.getBlinds()
-            .then((blinds) => blinds.map((blind) => {
-                return this.factory.createWindowCoveringAccessory(blind);
-            }));
-    }
-
-    /**
-     * Configure and activate accessories
-     *
-     * @param accessories
-     */
-    addAccessories(accessories: PlatformAccessory[]): void {
-        accessories = accessories.filter((accessory) => {
-            return undefined === this.accessories.find((predicate) => accessory.UUID === predicate.UUID)
+    this.onHeartbeat(() => {
+      this.discoverAccessories()
+        .then((accessories) => {
+          this.registerAccessories(accessories);
+        })
+        .catch((reason) => {
+          this.log.error(reason);
         });
+    });
 
-        accessories = accessories.map((accessory) => {
-            this.log('Adding accessory %s', accessory.displayName);
+    this.onShutdown(() => {
+      this.container.heartbeat.clear();
+    });
+  }
 
-            this.configureAccessory(accessory);
-            return accessory;
+  validateConfig(): void {
+    if (this.config.name === undefined) {
+      this.config.name = 'myGEKKO';
+    }
+
+    if (this.config.blinds === undefined) {
+      this.config.blinds = true;
+    }
+
+    if (this.config.meteo === undefined) {
+      this.config.meteo = true;
+    }
+
+    if (
+      this.config.host === undefined ||
+      this.config.username === undefined ||
+      this.config.password === undefined
+    ) {
+      throw new Error('Platform config missing - please check the config file');
+    }
+  }
+
+  signalHeartbeat(): void {
+    this.emit(PlatformEventTypes.HEARTBEAT);
+  }
+
+  onHeartbeat(listener: () => void): void {
+    this.setMaxListeners(this.getMaxListeners() + 1);
+    this.on(PlatformEventTypes.HEARTBEAT, listener);
+  }
+
+  signalShutdown(): void {
+    this.emit(PlatformEventTypes.SHUTDOWN);
+  }
+
+  onShutdown(listener: () => void): void {
+    this.setMaxListeners(this.getMaxListeners() + 1);
+    this.on(PlatformEventTypes.SHUTDOWN, listener);
+  }
+
+  generateUUID(accessoryIdentifier: string): string {
+    return this.api.hap.uuid.generate(
+      `${PLUGIN_IDENTIFIER}/${accessoryIdentifier}`,
+    );
+  }
+
+  async discoverAccessories(): Promise<PlatformAccessory[]> {
+    return [
+      ...(this.config.blinds ? await this.discoverBlindAccessories() : []),
+      ...(this.config.meteo ? await this.discoverMeteoAccessories() : []),
+    ];
+  }
+
+  async discoverBlindAccessories(): Promise<PlatformAccessory[]> {
+    const accessories: PlatformAccessory[] = [];
+    const blinds = await this.container.queryAPI.getBlinds();
+
+    for (const blind of blinds) {
+      const accessory =
+        await this.container.blindAccessoryFactory.createAccessory(blind);
+
+      if (this.accessoryExists(accessory)) {
+        continue;
+      }
+
+      this.configureAccessory(accessory);
+
+      accessories.push(accessory);
+    }
+
+    return accessories;
+  }
+
+  async discoverMeteoAccessories(): Promise<PlatformAccessory[]> {
+    const accessories: PlatformAccessory[] = [];
+    const meteoAccessories = [
+      await this.container.meteoTemperatureAccessoryFactory.createAccessory(),
+    ];
+
+    for (const meteoAccessory of meteoAccessories) {
+      if (this.accessoryExists(meteoAccessory)) {
+        continue;
+      }
+
+      this.configureAccessory(meteoAccessory);
+
+      accessories.push(meteoAccessory);
+    }
+
+    return accessories;
+  }
+
+  registerAccessories(accessories: PlatformAccessory[]): void {
+    this.api.registerPlatformAccessories(
+      PLUGIN_IDENTIFIER,
+      PLATFORM_NAME,
+      accessories,
+    );
+  }
+
+  accessoryExists(accessory: PlatformAccessory): boolean {
+    const uuid = accessory.UUID;
+    return (
+      this._accessories.find((accessory) => accessory.UUID === uuid) !==
+      undefined
+    );
+  }
+
+  configureAccessory(accessory: PlatformAccessory): void {
+    if (accessory.category === Categories.WINDOW_COVERING) {
+      this.configureBlindAccessory(accessory)
+        .then(() => {
+          this._accessories.push(accessory);
+        })
+        .catch((reason) => {
+          this.log.error(reason);
         });
-
-        this.api.registerPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, accessories);
+      return;
     }
 
-    /**
-     * This method is called for every PlatformAccessory, which is recreated from disk on startup.
-     * It should be used to properly initialize the Accessory and setup all event handlers for
-     * all services and their characteristics.
-     *
-     * @param {PlatformAccessory} accessory which needs to be configured
-     */
-    configureAccessory(accessory: PlatformAccessory): void {
-        const device = this.createDevice(accessory);
-        if (device === undefined) {
-            this.log('Removing orphaned accessory %s', accessory.displayName);
-
-            this.api.unregisterPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, [accessory]);
-            return;
-        }
-
-        this.addDevice(device);
+    if (
+      accessory.category === Categories.OTHER &&
+      accessory.context.type === 'meteo-temperature'
+    ) {
+      this.configureMeteoTemperatureAccessory(accessory)
+        .then(() => {
+          this._accessories.push(accessory);
+        })
+        .catch((reason) => {
+          this.log.error(reason);
+        });
+      return;
     }
 
-    createDevice(accessory: PlatformAccessory): DeviceInterface | undefined {
-        switch (accessory.context.type) {
-            case Categories.WINDOW_COVERING:
-            case AccessoryType.WINDOW_COVERING:
-                return new WindowCovering(this, accessory);
-            case Categories.OTHER:
-            case AccessoryType.WEATHER_STATION:
-                return new WeatherStation(this, accessory);
-        }
-    }
+    this.log.warn(
+      `Accessory category ${accessory.category} (type: ${accessory.context.type}) unknown to this platform`,
+    );
+  }
 
-    addDevice(device: DeviceInterface): void {
-        device.activate().catch(this.log.error);
-        this.devices.push(device);
-    }
+  async configureBlindAccessory(accessory: PlatformAccessory): Promise<void> {
+    const characteristics =
+      await this.container.blindCharacteristicsFactory.createCharacteristics(
+        accessory,
+      );
+    const observer =
+      this.container.blindObserverFactory.createObserver(characteristics);
 
-    updateDevices(): void {
-        this.devices.forEach((device) => device.update().catch(this.log.error));
-    }
+    characteristics.registerListeners();
+    observer.registerListeners();
+  }
 
-    removeDevices(): void {
-        this.devices.forEach((device) => device.arrest().catch(this.log.error));
-        this.api.unregisterPlatformAccessories(PLUGIN_IDENTIFIER, PLATFORM_NAME, this.accessories);
-        this.devices.splice(0, this.devices.length); // clear out the array
-    }
+  async configureMeteoTemperatureAccessory(
+    accessory: PlatformAccessory,
+  ): Promise<void> {
+    const characteristics =
+      await this.container.meteoTemperatureCharacteristicsFactory.createCharacteristics(
+        accessory,
+      );
+    const observer =
+      this.container.meteoTemperatureObserverFactory.createObserver(
+        characteristics,
+      );
+
+    characteristics.registerListeners();
+    observer.registerListeners();
+  }
 }
