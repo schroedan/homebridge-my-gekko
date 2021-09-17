@@ -28,16 +28,58 @@ describe('Blind Observer', () => {
     expect(blind.container).toBe(container);
     expect(blind.characteristics).toBe(characteristics);
   });
-  it('should update everything on platform heartbeat', async () => {
+  it('should update name on platform heartbeat', async () => {
     const onHeartbeat = jest.spyOn(platform, 'onHeartbeat');
-    const updateAll = jest.spyOn(BlindObserver.prototype, 'updateAll');
+    const updateName = jest.spyOn(BlindObserver.prototype, 'updateName');
 
     const blind = new BlindObserver(container, characteristics);
 
     blind.registerListeners();
 
     expect(onHeartbeat).toHaveBeenCalled();
-    expect(updateAll).toHaveBeenCalled();
+    expect(updateName).toHaveBeenCalled();
+  });
+  it('should update current position on platform heartbeat', async () => {
+    const onHeartbeat = jest.spyOn(platform, 'onHeartbeat');
+    const updateCurrentPosition = jest.spyOn(
+      BlindObserver.prototype,
+      'updateCurrentPosition',
+    );
+
+    const blind = new BlindObserver(container, characteristics);
+
+    blind.registerListeners();
+
+    expect(onHeartbeat).toHaveBeenCalled();
+    expect(updateCurrentPosition).toHaveBeenCalled();
+  });
+  it('should update position state on platform heartbeat', async () => {
+    const onHeartbeat = jest.spyOn(platform, 'onHeartbeat');
+    const updatePositionState = jest.spyOn(
+      BlindObserver.prototype,
+      'updatePositionState',
+    );
+
+    const blind = new BlindObserver(container, characteristics);
+
+    blind.registerListeners();
+
+    expect(onHeartbeat).toHaveBeenCalled();
+    expect(updatePositionState).toHaveBeenCalled();
+  });
+  it('should update obstruction detected on platform heartbeat', async () => {
+    const onHeartbeat = jest.spyOn(platform, 'onHeartbeat');
+    const updateObstructionDetected = jest.spyOn(
+      BlindObserver.prototype,
+      'updateObstructionDetected',
+    );
+
+    const blind = new BlindObserver(container, characteristics);
+
+    blind.registerListeners();
+
+    expect(onHeartbeat).toHaveBeenCalled();
+    expect(updateObstructionDetected).toHaveBeenCalled();
   });
   it('should update name in characteristics', async () => {
     characteristics.name.value = '__old_name__';
@@ -52,6 +94,16 @@ describe('Blind Observer', () => {
     );
     expect(characteristics.updateName).toHaveBeenCalledWith('__new_name__');
   });
+  it('should not update name in characteristics for same name', async () => {
+    characteristics.name.value = '__name__';
+    characteristics.getName.mockResolvedValue('__name__');
+
+    const blind = new BlindObserver(container, characteristics);
+
+    await blind.updateName();
+
+    expect(characteristics.updateName).not.toHaveBeenCalled();
+  });
   it('should update current position in characteristics', async () => {
     characteristics.name.value = '__name__';
     characteristics.getPosition.mockResolvedValue(50);
@@ -64,6 +116,39 @@ describe('Blind Observer', () => {
       'Updating current position of blind __name__: 50% open',
     );
     expect(characteristics.updateCurrentPosition).toHaveBeenCalledWith(50);
+  });
+  it('should not update current position in characteristics for same position', async () => {
+    characteristics.currentPosition.value = 50;
+    characteristics.getPosition.mockResolvedValue(50);
+
+    const blind = new BlindObserver(container, characteristics);
+
+    await blind.updateCurrentPosition();
+
+    expect(characteristics.updateCurrentPosition).not.toHaveBeenCalled();
+  });
+  it('should update target position in characteristics', async () => {
+    characteristics.name.value = '__name__';
+    characteristics.getPosition.mockResolvedValue(50);
+
+    const blind = new BlindObserver(container, characteristics);
+
+    await blind.updateTargetPosition();
+
+    expect(platform.log.debug).toHaveBeenCalledWith(
+      'Updating target position of blind __name__: 50% open',
+    );
+    expect(characteristics.updateTargetPosition).toHaveBeenCalledWith(50);
+  });
+  it('should not update target position in characteristics for same position', async () => {
+    characteristics.targetPosition.value = 50;
+    characteristics.getPosition.mockResolvedValue(50);
+
+    const blind = new BlindObserver(container, characteristics);
+
+    await blind.updateTargetPosition();
+
+    expect(characteristics.updateTargetPosition).not.toHaveBeenCalled();
   });
   it('should update decreasing position state in characteristics', async () => {
     characteristics.name.value = '__name__';
@@ -106,6 +191,16 @@ describe('Blind Observer', () => {
     );
     expect(characteristics.updatePositionState).toHaveBeenCalledWith('__stp__');
   });
+  it('should not update position state in characteristics for same position state', async () => {
+    characteristics.positionState.value = '__dec__';
+    characteristics.getPositionState.mockResolvedValue('__dec__');
+
+    const blind = new BlindObserver(container, characteristics);
+
+    await blind.updatePositionState();
+
+    expect(characteristics.updatePositionState).not.toHaveBeenCalled();
+  });
   it('should update obstruction is detected in characteristics', async () => {
     characteristics.name.value = '__name__';
     characteristics.isObstructionDetected.mockResolvedValue(true);
@@ -136,16 +231,26 @@ describe('Blind Observer', () => {
       false,
     );
   });
+  it('should not update obstruction is detected in characteristics for same state', async () => {
+    characteristics.obstructionDetected.value = false;
+    characteristics.isObstructionDetected.mockResolvedValue(false);
+
+    const blind = new BlindObserver(container, characteristics);
+
+    await blind.updateObstructionDetected();
+
+    expect(characteristics.updateObstructionDetected).not.toHaveBeenCalled();
+  });
   it('should log error on failed update', async () => {
     jest
-      .spyOn(BlindObserver.prototype, 'updateAll')
+      .spyOn(BlindObserver.prototype, 'updateName')
       .mockRejectedValue('__reason__');
 
     const blind = new BlindObserver(container, characteristics);
 
     blind.registerListeners();
 
-    await Promise.resolve();
+    await new Promise(setImmediate);
 
     expect(platform.log.error).toHaveBeenCalledWith('__reason__');
   });

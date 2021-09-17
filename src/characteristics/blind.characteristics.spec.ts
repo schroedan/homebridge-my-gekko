@@ -391,7 +391,7 @@ describe('Blind Characteristics', () => {
 
     jest.advanceTimersByTime(500);
 
-    await Promise.resolve();
+    await new Promise(setImmediate);
 
     expect(platform.log.error).toHaveBeenCalledWith('__reason__');
   });

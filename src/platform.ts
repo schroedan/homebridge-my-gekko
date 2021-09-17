@@ -233,6 +233,12 @@ export class Platform extends EventEmitter implements DynamicPlatformPlugin {
     const observer =
       this.container.blindObserverFactory.createObserver(characteristics);
 
+    await observer.updateName();
+    await observer.updateCurrentPosition();
+    await observer.updateTargetPosition();
+    await observer.updatePositionState();
+    await observer.updateObstructionDetected();
+
     characteristics.registerListeners();
     observer.registerListeners();
   }
@@ -248,6 +254,8 @@ export class Platform extends EventEmitter implements DynamicPlatformPlugin {
       this.container.meteoTemperatureObserverFactory.createObserver(
         characteristics,
       );
+
+    observer.updateCurrentTemperature();
 
     characteristics.registerListeners();
     observer.registerListeners();

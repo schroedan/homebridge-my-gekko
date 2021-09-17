@@ -9,17 +9,15 @@ export class BlindObserver {
 
   registerListeners(): void {
     this.container.platform.onHeartbeat(() => {
-      this.updateAll().catch((reason) => {
+      Promise.all([
+        this.updateName(),
+        this.updateCurrentPosition(),
+        this.updatePositionState(),
+        this.updateObstructionDetected(),
+      ]).catch((reason) => {
         this.container.platform.log.error(reason);
       });
     });
-  }
-
-  async updateAll(): Promise<void> {
-    await this.updateName();
-    await this.updateCurrentPosition();
-    await this.updatePositionState();
-    await this.updateObstructionDetected();
   }
 
   async updateName(): Promise<void> {
@@ -53,6 +51,21 @@ export class BlindObserver {
     );
 
     this.characteristics.updateCurrentPosition(value);
+  }
+
+  async updateTargetPosition(): Promise<void> {
+    const name = this.characteristics.name.value || 'unnamed';
+    const value = await this.characteristics.getPosition();
+
+    if (this.characteristics.targetPosition.value === value) {
+      return;
+    }
+
+    this.container.platform.log.debug(
+      `Updating target position of blind ${name}: ${value}% open`,
+    );
+
+    this.characteristics.updateTargetPosition(value);
   }
 
   async updatePositionState(): Promise<void> {

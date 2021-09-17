@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "homebridge-my-gekko",
+  "pluginAlias": "mygekko",
   "pluginType": "platform",
   "singular": true,
   "headerDisplay": "myGEKKO Platform Plugin for Homebridge",

@@ -186,7 +186,7 @@ describe('Platform', () => {
 
     expect(platform.accessoryExists(accessory)).toEqual(true);
   });
-  it('should register listeners when configuring blind accessory', async () => {
+  it('should update characteristics and register listeners when configuring blind accessory', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const queryAPI = mock<QueryAPI>();
     const blind = mock<Blind>();
@@ -225,10 +225,16 @@ describe('Platform', () => {
 
     await platform.configureBlindAccessory(accessory);
 
+    expect(blindObserver.updateName).toHaveBeenCalled();
+    expect(blindObserver.updateCurrentPosition).toHaveBeenCalled();
+    expect(blindObserver.updateTargetPosition).toHaveBeenCalled();
+    expect(blindObserver.updatePositionState).toHaveBeenCalled();
+    expect(blindObserver.updateObstructionDetected).toHaveBeenCalled();
+
     expect(blindCharacteristics.registerListeners).toHaveBeenCalled();
     expect(blindObserver.registerListeners).toHaveBeenCalled();
   });
-  it('should register listeners when configuring meteo temperature accessory', async () => {
+  it('should update characteristics and register listeners when configuring meteo temperature accessory', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const queryAPI = mock<QueryAPI>();
     const meteo = mock<Meteo>();
@@ -270,6 +276,10 @@ describe('Platform', () => {
     const platform = new Platform(log, config, api);
 
     await platform.configureMeteoTemperatureAccessory(accessory);
+
+    expect(
+      meteoTemperatureObserver.updateCurrentTemperature,
+    ).toHaveBeenCalled();
 
     expect(
       meteoTemperatureCharacteristics.registerListeners,
@@ -322,8 +332,14 @@ describe('Platform', () => {
   it('should not descover blind accessories', async () => {
     config.meteo = false;
 
-    const discoverBlindAccessories = jest.spyOn(Platform.prototype, 'discoverBlindAccessories');
-    const discoverMeteoAccessories = jest.spyOn(Platform.prototype, 'discoverMeteoAccessories');
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const discoverMeteoAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverMeteoAccessories',
+    );
 
     const platform = new Platform(log, config, api);
 
@@ -335,8 +351,14 @@ describe('Platform', () => {
   it('should not descover meteo accessories', async () => {
     config.blinds = false;
 
-    const discoverBlindAccessories = jest.spyOn(Platform.prototype, 'discoverBlindAccessories');
-    const discoverMeteoAccessories = jest.spyOn(Platform.prototype, 'discoverMeteoAccessories');
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const discoverMeteoAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverMeteoAccessories',
+    );
 
     const platform = new Platform(log, config, api);
 
@@ -400,7 +422,7 @@ describe('Platform', () => {
 
     platform.signalHeartbeat();
 
-    await Promise.resolve();
+    await new Promise(setImmediate);
 
     expect(registerAccessories).toHaveBeenCalled();
   });
@@ -420,7 +442,7 @@ describe('Platform', () => {
 
     platform.configureAccessory(accessory);
 
-    await Promise.resolve();
+    await new Promise(setImmediate);
 
     expect(configureBlindAccessory).toHaveBeenCalledWith(accessory);
   });
@@ -442,7 +464,7 @@ describe('Platform', () => {
 
     platform.configureAccessory(accessory);
 
-    await Promise.resolve();
+    await new Promise(setImmediate);
 
     expect(configureMeteoTemperatureAccessory).toHaveBeenCalledWith(accessory);
   });

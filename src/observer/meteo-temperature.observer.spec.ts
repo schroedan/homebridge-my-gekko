@@ -76,7 +76,7 @@ describe('Meteo Temperature Observer', () => {
 
     meteoTemperature.registerListeners();
 
-    await Promise.resolve();
+    await new Promise(setImmediate);
 
     expect(platform.log.error).toHaveBeenCalledWith('__reason__');
   });
