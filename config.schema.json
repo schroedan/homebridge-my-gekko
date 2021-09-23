@@ -53,8 +53,13 @@
         "type": "number",
         "placeholder": 3
       },
+      "deferance": {
+        "title": "Update deferance after allocation in seconds",
+        "type": "number",
+        "placeholder": 60
+      },
       "delay": {
-        "title": "Allocation delay in ms",
+        "title": "Allocation delay in milliseconds",
         "type": "number",
         "placeholder": 500
       }

@@ -37,6 +37,7 @@ Add platform to `config.json`, for configuration see below.
       "meteo": true,
       "ttl": 1,
       "interval": 3,
+      "deferance": 60,
       "delay": 500
     }
   ]
@@ -48,7 +49,7 @@ The `username` and `password` must be defined in the local QueryAPI settings of 
 
 The discovery of blind and/or meteo accessories can be disabled by setting the `blinds` and/or `meteo` options to `false`.
 
-Feel free to adjust the options for client cache TTL (`ttl` in seconds), update interval (`interval` in seconds) and allocation delay (`delay` in milliseconds).
+Feel free to adjust the options for client cache TTL (`ttl` in seconds), update interval (`interval` in seconds), allocation deferance (`deferance` in seconds) and allocation delay (`delay` in milliseconds).
 
 ## Debugging
 

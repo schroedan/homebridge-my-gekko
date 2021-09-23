@@ -32,10 +32,6 @@ export class BlindCharacteristics {
     return this.service.getCharacteristic(Characteristic.ObstructionDetected);
   }
 
-  get stopped(): boolean {
-    return this.positionState.value === Characteristic.PositionState.STOPPED;
-  }
-
   get usher(): Delay<() => void> {
     if (this._usher === undefined) {
       this._usher = new Delay(this.container.platform.config.delay ?? 500);

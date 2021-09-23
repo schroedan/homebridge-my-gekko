@@ -255,7 +255,7 @@ export class Platform extends EventEmitter implements DynamicPlatformPlugin {
         characteristics,
       );
 
-    observer.updateCurrentTemperature();
+    await observer.updateCurrentTemperature();
 
     characteristics.registerListeners();
     observer.registerListeners();

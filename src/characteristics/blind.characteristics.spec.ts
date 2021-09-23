@@ -97,19 +97,6 @@ describe('Blind Characteristics', () => {
       platform.api.hap.Characteristic.ObstructionDetected,
     );
   });
-  it('should provide stopped state', () => {
-    const positionState = mock<ServcieCharacteristic>();
-    const blind = new BlindCharacteristics(container, service, api);
-
-    service.getCharacteristic.mockReturnValue(positionState);
-
-    positionState.value = platform.api.hap.Characteristic.PositionState.STOPPED;
-
-    expect(blind.stopped).toBeTruthy();
-    expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.PositionState,
-    );
-  });
   it('should provide usher', () => {
     const blind = new BlindCharacteristics(container, service, api);
 

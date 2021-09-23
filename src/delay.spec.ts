@@ -2,6 +2,7 @@ import { Delay } from './delay';
 
 describe('Delay', () => {
   beforeEach(() => {
+    Date.now = jest.fn(() => 1487076708000);
     jest.useFakeTimers();
   });
   afterEach(() => {
@@ -18,6 +19,20 @@ describe('Delay', () => {
     jest.advanceTimersByTime(300);
 
     expect(counter).toEqual(1);
+  });
+  it('should provide timestamp', () => {
+    const delay = new Delay<() => void>(100);
+    let counter = 0;
+
+    delay.set(() => {
+      counter = counter + 1;
+    });
+
+    expect(delay.timestamp).toEqual(0);
+
+    jest.advanceTimersByTime(300);
+
+    expect(delay.timestamp).toEqual(1487076708);
   });
   it('should indicate pending state', () => {
     const delay = new Delay<() => void>(100);

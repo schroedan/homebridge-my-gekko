@@ -2,6 +2,20 @@ import { BlindCharacteristics } from '../characteristics';
 import { Container } from '../container';
 
 export class BlindObserver {
+  get allocationDeferred(): boolean {
+    const deferance = this.container.platform.config.deferance ?? 60;
+
+    if (this.characteristics.usher.pending) {
+      return true;
+    }
+
+    return (
+      this.container.heartbeat.timestamp -
+        this.characteristics.usher.timestamp <
+      deferance
+    );
+  }
+
   constructor(
     readonly container: Container,
     readonly characteristics: BlindCharacteristics,
@@ -12,6 +26,7 @@ export class BlindObserver {
       Promise.all([
         this.updateName(),
         this.updateCurrentPosition(),
+        this.updateTargetPosition(),
         this.updatePositionState(),
         this.updateObstructionDetected(),
       ]).catch((reason) => {
@@ -40,7 +55,7 @@ export class BlindObserver {
     const value = await this.characteristics.getPosition();
 
     if (
-      this.characteristics.usher.pending ||
+      this.allocationDeferred ||
       this.characteristics.currentPosition.value === value
     ) {
       return;
@@ -57,7 +72,10 @@ export class BlindObserver {
     const name = this.characteristics.name.value || 'unnamed';
     const value = await this.characteristics.getPosition();
 
-    if (this.characteristics.targetPosition.value === value) {
+    if (
+      this.allocationDeferred ||
+      this.characteristics.targetPosition.value === value
+    ) {
       return;
     }
 
@@ -72,7 +90,10 @@ export class BlindObserver {
     const name = this.characteristics.name.value || 'unnamed';
     const value = await this.characteristics.getPositionState();
 
-    if (this.characteristics.positionState.value === value) {
+    if (
+      this.allocationDeferred ||
+      this.characteristics.positionState.value === value
+    ) {
       return;
     }
 
