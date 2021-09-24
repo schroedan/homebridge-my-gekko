@@ -12,7 +12,7 @@ import {
   BlindAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
-import { API as QueryAPI, Blind, Meteo } from './api';
+import { BlindAPI, MeteoAPI, QueryAPI } from './api';
 import {
   BlindCharacteristics,
   BlindCharacteristicsFactory,
@@ -27,7 +27,8 @@ import {
   MeteoTemperatureObserver,
   MeteoTemperatureObserverFactory,
 } from './observer';
-import { Platform, PLUGIN_IDENTIFIER } from './platform';
+import { Platform } from './platform';
+import { PlatformEventEmitter } from './platform-events';
 
 describe('Platform', () => {
   let log: MockProxy<Logging>;
@@ -36,15 +37,9 @@ describe('Platform', () => {
   beforeEach(() => {
     log = mock<Logging>();
     config = mock<PlatformConfig>({
-      name: 'myGEKKO',
       host: '__host__',
       username: '__userbane__',
       password: '__password__',
-      blinds: true,
-      meteo: true,
-      ttl: undefined,
-      interval: undefined,
-      delay: undefined,
     });
     api = mock<API>({
       hap: {
@@ -61,26 +56,25 @@ describe('Platform', () => {
   });
   it('should provide container', () => {
     const platform = new Platform(log, config, api);
-    const container = platform.container;
 
-    expect(container).toBeInstanceOf(Container);
-    expect(platform.container).toBe(container);
-  });
-  it('should return platform config with defaults', () => {
-    config.name = undefined;
-    config.blinds = undefined;
-    config.meteo = undefined;
-
-    new Platform(log, config, api);
-
-    expect(config.name).toBe('myGEKKO');
-    expect(config.blinds).toBe(true);
-    expect(config.meteo).toBe(true);
+    expect(platform.container).toBeInstanceOf(Container);
   });
   it('should log an error for invalid platform config', () => {
-    config.host = undefined;
-    config.username = undefined;
-    config.password = undefined;
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        config: {
+          host: undefined,
+          username: undefined,
+          password: undefined,
+        },
+        eventEmitter,
+        logger: log,
+      }),
+    );
 
     new Platform(log, config, api);
 
@@ -89,8 +83,24 @@ describe('Platform', () => {
     );
   });
   it('should register listeners', () => {
-    const onHeartbeat = jest.spyOn(Platform.prototype, 'onHeartbeat');
-    const onShutdown = jest.spyOn(Platform.prototype, 'onShutdown');
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        config,
+        eventEmitter,
+        heartbeat: mock<Interval<() => void>>(),
+        logger: log,
+      }),
+    );
+    eventEmitter.onHeartbeat.mockImplementation((listener) => {
+      listener();
+    });
+    eventEmitter.onShutdown.mockImplementation((listener) => {
+      listener();
+    });
 
     new Platform(log, config, api);
 
@@ -102,17 +112,12 @@ describe('Platform', () => {
       APIEvent.SHUTDOWN,
       expect.any(Function),
     );
-    expect(onHeartbeat).toHaveBeenCalled();
-    expect(onShutdown).toHaveBeenCalled();
+    expect(eventEmitter.onHeartbeat).toHaveBeenCalled();
+    expect(eventEmitter.onShutdown).toHaveBeenCalled();
   });
   it('should signal heartbeat in intervals', () => {
-    const signalHeartbeat = jest.spyOn(Platform.prototype, 'signalHeartbeat');
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
-    const queryAPI = mock<QueryAPI>();
-    const container = mock<Container>({
-      heartbeat: new Interval(300),
-      queryAPI,
-    });
+    const eventEmitter = mock<PlatformEventEmitter>();
 
     api.on.mockImplementation(
       (event: 'didFinishLaunching' | 'shutdown', listener: () => void) => {
@@ -120,58 +125,61 @@ describe('Platform', () => {
         return api;
       },
     );
-
-    getContainer.mockReturnValue(container);
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        config,
+        eventEmitter,
+        heartbeat: new Interval(300),
+        logger: log,
+        queryAPI: mock<QueryAPI>(),
+      }),
+    );
 
     new Platform(log, config, api);
 
     jest.advanceTimersByTime(300);
 
-    expect(signalHeartbeat).toHaveBeenCalled();
+    expect(eventEmitter.signalHeartbeat).toHaveBeenCalled();
   });
   it('should signal shutdown', () => {
-    const signalShutdown = jest.spyOn(Platform.prototype, 'signalShutdown');
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
 
     api.on.mockImplementation(
       (event: 'didFinishLaunching' | 'shutdown', listener: () => void) => {
         event === 'shutdown' && listener();
         return api;
       },
+    );
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        config,
+        eventEmitter,
+        logger: log,
+      }),
     );
 
     new Platform(log, config, api);
 
-    expect(signalShutdown).toHaveBeenCalled();
+    expect(eventEmitter.signalShutdown).toHaveBeenCalled();
   });
   it('should clear heartbeat on shutdown', () => {
-    const heartbeat = mock<Interval<() => void>>();
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+    const heartbeat = mock<Interval<() => void>>();
 
-    getContainer.mockReturnValue(mock<Container>({ heartbeat }));
-
-    api.on.mockImplementation(
-      (event: 'didFinishLaunching' | 'shutdown', listener: () => void) => {
-        event === 'shutdown' && listener();
-        return api;
-      },
+    getContainer.mockReturnValue(
+      mock<Container>({ api, config, eventEmitter, heartbeat, logger: log }),
     );
+    eventEmitter.onShutdown.mockImplementation((listener) => {
+      listener();
+    });
 
-    const platform = new Platform(log, config, api);
-
-    platform.signalShutdown();
+    new Platform(log, config, api);
 
     expect(heartbeat.clear).toHaveBeenCalled();
-  });
-  it('should generate UUID', async () => {
-    const generate = jest.fn();
-    const api = mock<API>({ hap: { uuid: { generate } } });
-
-    generate.mockReturnValue('__uuid__');
-
-    const platform = new Platform(log, config, api);
-
-    expect(platform.generateUUID('foo/bar')).toEqual('__uuid__');
-    expect(generate).toHaveBeenCalledWith(`${PLUGIN_IDENTIFIER}/foo/bar`);
   });
   it('should indicate that the accessory already exists', () => {
     const accessory = mock<PlatformAccessory>();
@@ -188,8 +196,9 @@ describe('Platform', () => {
   });
   it('should update characteristics and register listeners when configuring blind accessory', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
     const queryAPI = mock<QueryAPI>();
-    const blind = mock<Blind>();
+    const blind = mock<BlindAPI>();
     const blindCharacteristicsFactory = mock<BlindCharacteristicsFactory>();
     const blindCharacteristics = mock<BlindCharacteristics>();
     const blindObserverFactory = mock<BlindObserverFactory>();
@@ -200,9 +209,12 @@ describe('Platform', () => {
 
     getContainer.mockReturnValue(
       mock<Container>({
-        queryAPI,
+        api,
         blindCharacteristicsFactory,
         blindObserverFactory,
+        eventEmitter,
+        logger: log,
+        queryAPI,
       }),
     );
     queryAPI.getBlind.mockResolvedValue(blind);
@@ -236,8 +248,9 @@ describe('Platform', () => {
   });
   it('should update characteristics and register listeners when configuring meteo temperature accessory', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
     const queryAPI = mock<QueryAPI>();
-    const meteo = mock<Meteo>();
+    const meteo = mock<MeteoAPI>();
     const meteoTemperatureCharacteristicsFactory =
       mock<MeteoTemperatureCharacteristicsFactory>();
     const meteoTemperatureCharacteristics =
@@ -251,9 +264,12 @@ describe('Platform', () => {
 
     getContainer.mockReturnValue(
       mock<Container>({
-        queryAPI,
+        api,
+        eventEmitter,
+        logger: log,
         meteoTemperatureCharacteristicsFactory,
         meteoTemperatureObserverFactory,
+        queryAPI,
       }),
     );
     queryAPI.getMeteo.mockResolvedValue(meteo);
@@ -288,14 +304,15 @@ describe('Platform', () => {
   });
   it('should discover only new accessories', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
     const accessoryExists = jest.spyOn(Platform.prototype, 'accessoryExists');
     const configureAccessory = jest.spyOn(
       Platform.prototype,
       'configureAccessory',
     );
     const queryAPI = mock<QueryAPI>();
-    const blind = mock<Blind>();
-    const meteo = mock<Meteo>();
+    const blind = mock<BlindAPI>();
+    const meteo = mock<MeteoAPI>();
     const blindAccessoryFactory = mock<BlindAccessoryFactory>();
     const meteoTemperatureAccessoryFactory =
       mock<MeteoTemperatureAccessoryFactory>();
@@ -306,7 +323,11 @@ describe('Platform', () => {
 
     getContainer.mockReturnValue(
       mock<Container>({
+        api,
         blindAccessoryFactory,
+        config,
+        eventEmitter,
+        logger: log,
         meteoTemperatureAccessoryFactory,
         queryAPI,
       }),
@@ -329,54 +350,17 @@ describe('Platform', () => {
     expect(accessories[0]).toEqual(accessory);
     expect(accessories[1]).toEqual(accessory);
   });
-  it('should not descover blind accessories', async () => {
-    config.meteo = false;
-
-    const discoverBlindAccessories = jest.spyOn(
-      Platform.prototype,
-      'discoverBlindAccessories',
-    );
-    const discoverMeteoAccessories = jest.spyOn(
-      Platform.prototype,
-      'discoverMeteoAccessories',
-    );
-
-    const platform = new Platform(log, config, api);
-
-    await platform.discoverAccessories();
-
-    expect(discoverBlindAccessories).toHaveBeenCalled();
-    expect(discoverMeteoAccessories).not.toHaveBeenCalled();
-  });
-  it('should not descover meteo accessories', async () => {
-    config.blinds = false;
-
-    const discoverBlindAccessories = jest.spyOn(
-      Platform.prototype,
-      'discoverBlindAccessories',
-    );
-    const discoverMeteoAccessories = jest.spyOn(
-      Platform.prototype,
-      'discoverMeteoAccessories',
-    );
-
-    const platform = new Platform(log, config, api);
-
-    await platform.discoverAccessories();
-
-    expect(discoverBlindAccessories).not.toHaveBeenCalled();
-    expect(discoverMeteoAccessories).toHaveBeenCalled();
-  });
   it('should skip already discovered accessories', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
     const accessoryExists = jest.spyOn(Platform.prototype, 'accessoryExists');
     const configureAccessory = jest.spyOn(
       Platform.prototype,
       'configureAccessory',
     );
     const queryAPI = mock<QueryAPI>();
-    const blind = mock<Blind>();
-    const meteo = mock<Meteo>();
+    const blind = mock<BlindAPI>();
+    const meteo = mock<MeteoAPI>();
     const blindAccessoryFactory = mock<BlindAccessoryFactory>();
     const meteoTemperatureAccessoryFactory =
       mock<MeteoTemperatureAccessoryFactory>();
@@ -387,7 +371,11 @@ describe('Platform', () => {
 
     getContainer.mockReturnValue(
       mock<Container>({
+        api,
         blindAccessoryFactory,
+        config,
+        eventEmitter,
+        logger: log,
         meteoTemperatureAccessoryFactory,
         queryAPI,
       }),
@@ -408,7 +396,66 @@ describe('Platform', () => {
 
     expect(accessories.length).toEqual(0);
   });
+  it('should not descover blind accessories', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const discoverMeteoAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverMeteoAccessories',
+    );
+
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        config: { meteo: false },
+        eventEmitter,
+        logger: log,
+      }),
+    );
+    discoverBlindAccessories.mockImplementation(async () => []);
+
+    const platform = new Platform(log, config, api);
+
+    await platform.discoverAccessories();
+
+    expect(discoverBlindAccessories).toHaveBeenCalled();
+    expect(discoverMeteoAccessories).not.toHaveBeenCalled();
+  });
+  it('should not descover meteo accessories', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const discoverMeteoAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverMeteoAccessories',
+    );
+
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        config: { blinds: false },
+        eventEmitter,
+        logger: log,
+      }),
+    );
+    discoverMeteoAccessories.mockImplementation(async () => []);
+
+    const platform = new Platform(log, config, api);
+
+    await platform.discoverAccessories();
+
+    expect(discoverBlindAccessories).not.toHaveBeenCalled();
+    expect(discoverMeteoAccessories).toHaveBeenCalled();
+  });
   it('should register discovered accessories on heartbeat', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const registerAccessories = jest.spyOn(
       Platform.prototype,
       'registerAccessories',
@@ -418,13 +465,47 @@ describe('Platform', () => {
       .spyOn(Platform.prototype, 'discoverAccessories')
       .mockResolvedValue([mock<PlatformAccessory>()]);
 
-    const platform = new Platform(log, config, api);
+    const eventEmitter = mock<PlatformEventEmitter>();
 
-    platform.signalHeartbeat();
+    getContainer.mockReturnValue(
+      mock<Container>({ api, config, eventEmitter, logger: log }),
+    );
+    eventEmitter.onHeartbeat.mockImplementation((listener) => {
+      listener();
+    });
+
+    new Platform(log, config, api);
 
     await new Promise(setImmediate);
 
     expect(registerAccessories).toHaveBeenCalled();
+  });
+  it('should log errors on accessory discovery', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const registerAccessories = jest.spyOn(
+      Platform.prototype,
+      'registerAccessories',
+    );
+
+    jest
+      .spyOn(Platform.prototype, 'discoverAccessories')
+      .mockRejectedValue('__reason__');
+
+    const eventEmitter = mock<PlatformEventEmitter>();
+
+    getContainer.mockReturnValue(
+      mock<Container>({ api, config, eventEmitter, logger: log }),
+    );
+    eventEmitter.onHeartbeat.mockImplementation((listener) => {
+      listener();
+    });
+
+    new Platform(log, config, api);
+
+    await new Promise(setImmediate);
+
+    expect(registerAccessories).not.toHaveBeenCalled();
+    expect(log.error).toHaveBeenCalledWith('__reason__');
   });
   it('should configure blind accessory', async () => {
     const accessory = mock<PlatformAccessory>({
@@ -469,15 +550,20 @@ describe('Platform', () => {
     expect(configureMeteoTemperatureAccessory).toHaveBeenCalledWith(accessory);
   });
   it('should log errors on blind accessory configuration', async () => {
-    const accessory = mock<PlatformAccessory>({
-      category: Categories.WINDOW_COVERING,
-    });
-
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
     const configureBlindAccessory = jest.spyOn(
       Platform.prototype,
       'configureBlindAccessory',
     );
 
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.WINDOW_COVERING,
+    });
+
+    getContainer.mockReturnValue(
+      mock<Container>({ api, eventEmitter, logger: log }),
+    );
     configureBlindAccessory.mockRejectedValue('__reason__');
 
     const platform = new Platform(log, config, api);
@@ -490,17 +576,22 @@ describe('Platform', () => {
     expect(log.error).toHaveBeenCalledWith('__reason__');
   });
   it('should log errors on meteo temperature accessory configuration', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+    const configureMeteoTemperatureAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureMeteoTemperatureAccessory',
+    );
+
     const accessory = mock<PlatformAccessory>({
       category: Categories.OTHER,
     });
 
     accessory.context.type = 'meteo-temperature';
 
-    const configureMeteoTemperatureAccessory = jest.spyOn(
-      Platform.prototype,
-      'configureMeteoTemperatureAccessory',
+    getContainer.mockReturnValue(
+      mock<Container>({ api, eventEmitter, logger: log }),
     );
-
     configureMeteoTemperatureAccessory.mockRejectedValue('__reason__');
 
     const platform = new Platform(log, config, api);

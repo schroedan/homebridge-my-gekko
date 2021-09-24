@@ -1,14 +1,15 @@
+import { API, Logging, PlatformConfig } from 'homebridge';
 import {
   BlindAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
 import {
-  API as QueryAPI,
   Cache,
   Client,
   Connection,
   LocalConnection,
   MemoryCache,
+  QueryAPI,
 } from './api';
 import {
   BlindCharacteristicsFactory,
@@ -19,7 +20,8 @@ import {
   BlindObserverFactory,
   MeteoTemperatureObserverFactory,
 } from './observer';
-import { Platform } from './platform';
+import { PlatformEventEmitter } from './platform-events';
+import { UUID } from './uuid';
 
 export class Container {
   private _blindAccessoryFactory?: BlindAccessoryFactory;
@@ -28,17 +30,40 @@ export class Container {
   private _client?: Client;
   private _clientCache?: Cache;
   private _clientConnection?: Connection;
+  private _config: PlatformConfig;
+  private _eventEmitter?: PlatformEventEmitter;
   private _heartbeat?: Interval<() => void>;
   private _meteoTemperatureAccessoryFactory?: MeteoTemperatureAccessoryFactory;
   private _meteoTemperatureCharacteristicsFactory?: MeteoTemperatureCharacteristicsFactory;
   private _meteoTemperatureObserverFactory?: MeteoTemperatureObserverFactory;
   private _queryAPI?: QueryAPI;
+  private _uuid?: UUID;
 
-  constructor(readonly platform: Platform) {}
+  constructor(
+    config: PlatformConfig,
+    readonly logger: Logging,
+    readonly api: API,
+  ) {
+    this._config = Object.assign(
+      {
+        name: 'myGEKKO',
+        blinds: true,
+        meteo: true,
+        ttl: 1,
+        interval: 3,
+        deferance: 10,
+        delay: 500,
+      },
+      config,
+    );
+  }
 
   get blindAccessoryFactory(): BlindAccessoryFactory {
     if (this._blindAccessoryFactory === undefined) {
-      this._blindAccessoryFactory = new BlindAccessoryFactory(this);
+      this._blindAccessoryFactory = new BlindAccessoryFactory(
+        this.api,
+        this.uuid,
+      );
     }
 
     return this._blindAccessoryFactory;
@@ -46,7 +71,13 @@ export class Container {
 
   get blindCharacteristicsFactory(): BlindCharacteristicsFactory {
     if (this._blindCharacteristicsFactory === undefined) {
-      this._blindCharacteristicsFactory = new BlindCharacteristicsFactory(this);
+      this._blindCharacteristicsFactory = new BlindCharacteristicsFactory(
+        this.api,
+        this.queryAPI,
+        this.config,
+        this.logger,
+        this.eventEmitter,
+      );
     }
 
     return this._blindCharacteristicsFactory;
@@ -54,7 +85,12 @@ export class Container {
 
   get blindObserverFactory(): BlindObserverFactory {
     if (this._blindObserverFactory === undefined) {
-      this._blindObserverFactory = new BlindObserverFactory(this);
+      this._blindObserverFactory = new BlindObserverFactory(
+        this.eventEmitter,
+        this.logger,
+        this.heartbeat,
+        this.config,
+      );
     }
 
     return this._blindObserverFactory;
@@ -73,7 +109,7 @@ export class Container {
     if (this._clientCache === undefined) {
       // ToDo: support different cache backends
       this._clientCache = new MemoryCache({
-        ttl: this.platform.config.ttl ?? 3,
+        ttl: this.config.ttl,
       });
     }
 
@@ -84,20 +120,30 @@ export class Container {
     if (this._clientConnection === undefined) {
       // ToDo: make connection configurable
       this._clientConnection = new LocalConnection({
-        host: this.platform.config.host,
-        username: this.platform.config.username,
-        password: this.platform.config.password,
+        host: this.config.host,
+        username: this.config.username,
+        password: this.config.password,
       });
     }
 
     return this._clientConnection;
   }
 
+  get config(): PlatformConfig {
+    return this._config;
+  }
+
+  get eventEmitter(): PlatformEventEmitter {
+    if (this._eventEmitter === undefined) {
+      this._eventEmitter = new PlatformEventEmitter();
+    }
+
+    return this._eventEmitter;
+  }
+
   get heartbeat(): Interval<() => void> {
     if (this._heartbeat === undefined) {
-      this._heartbeat = new Interval(
-        (this.platform.config.interval ?? 3) * 1000,
-      );
+      this._heartbeat = new Interval(this.config.interval * 1000);
     }
 
     return this._heartbeat;
@@ -106,7 +152,7 @@ export class Container {
   get meteoTemperatureAccessoryFactory(): MeteoTemperatureAccessoryFactory {
     if (this._meteoTemperatureAccessoryFactory === undefined) {
       this._meteoTemperatureAccessoryFactory =
-        new MeteoTemperatureAccessoryFactory(this);
+        new MeteoTemperatureAccessoryFactory(this.api, this.uuid);
     }
 
     return this._meteoTemperatureAccessoryFactory;
@@ -115,7 +161,7 @@ export class Container {
   get meteoTemperatureCharacteristicsFactory(): MeteoTemperatureCharacteristicsFactory {
     if (this._meteoTemperatureCharacteristicsFactory === undefined) {
       this._meteoTemperatureCharacteristicsFactory =
-        new MeteoTemperatureCharacteristicsFactory(this);
+        new MeteoTemperatureCharacteristicsFactory(this.api, this.queryAPI);
     }
 
     return this._meteoTemperatureCharacteristicsFactory;
@@ -124,7 +170,7 @@ export class Container {
   get meteoTemperatureObserverFactory(): MeteoTemperatureObserverFactory {
     if (this._meteoTemperatureObserverFactory === undefined) {
       this._meteoTemperatureObserverFactory =
-        new MeteoTemperatureObserverFactory(this);
+        new MeteoTemperatureObserverFactory(this.eventEmitter, this.logger);
     }
 
     return this._meteoTemperatureObserverFactory;
@@ -136,5 +182,13 @@ export class Container {
     }
 
     return this._queryAPI;
+  }
+
+  get uuid(): UUID {
+    if (this._uuid === undefined) {
+      this._uuid = new UUID(this.api);
+    }
+
+    return this._uuid;
   }
 }

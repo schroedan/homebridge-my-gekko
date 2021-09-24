@@ -1,4 +1,4 @@
-import { API } from './api';
+import { QueryAPI } from './query.api';
 
 export type BlindResource = {
   name: string;
@@ -41,8 +41,8 @@ export enum BlindSumState {
   ALARM = '4',
 }
 
-export class Blind {
-  constructor(readonly api: API, readonly key: string) {}
+export class BlindAPI {
+  constructor(readonly api: QueryAPI, readonly key: string) {}
 
   protected async getResource(): Promise<BlindResource> {
     const resources = await this.api.getResources();

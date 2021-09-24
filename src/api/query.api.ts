@@ -1,7 +1,7 @@
-import { Blind, BlindResource, BlindStatus } from './blind';
+import { BlindAPI, BlindResource, BlindStatus } from './blind.api';
 import { Client } from './client';
-import { Meteo, MeteoResource, MeteoStatus } from './meteo';
-import { Network, NetworkResource, NetworkStatus } from './network';
+import { MeteoAPI, MeteoResource, MeteoStatus } from './meteo.api';
+import { NetworkAPI, NetworkResource, NetworkStatus } from './network.api';
 
 export type Resources = {
   globals: {
@@ -19,7 +19,7 @@ export type Status = {
   blinds?: Record<string, BlindStatus>;
 };
 
-export class API {
+export class QueryAPI {
   constructor(readonly client: Client) {}
 
   async getResources(): Promise<Resources> {
@@ -46,7 +46,7 @@ export class API {
     return status;
   }
 
-  async getBlinds(): Promise<Blind[]> {
+  async getBlinds(): Promise<BlindAPI[]> {
     const resources = await this.getResources();
 
     if (resources.blinds === undefined) {
@@ -55,36 +55,36 @@ export class API {
 
     return Object.keys(resources.blinds)
       .filter((key) => key.substr(0, 4) === 'item')
-      .map((key) => new Blind(this, key));
+      .map((key) => new BlindAPI(this, key));
   }
 
-  async getBlind(key: string): Promise<Blind> {
+  async getBlind(key: string): Promise<BlindAPI> {
     const resources = await this.getResources();
 
     if (resources.blinds === undefined || resources.blinds[key] === undefined) {
       throw new Error('Blind not found.');
     }
 
-    return new Blind(this, key);
+    return new BlindAPI(this, key);
   }
 
-  async getMeteo(): Promise<Meteo> {
+  async getMeteo(): Promise<MeteoAPI> {
     const resources = await this.getResources();
 
     if (resources.globals.meteo === undefined) {
       throw new Error('Meteo not found.');
     }
 
-    return new Meteo(this);
+    return new MeteoAPI(this);
   }
 
-  async getNetwork(): Promise<Network> {
+  async getNetwork(): Promise<NetworkAPI> {
     const resources = await this.getResources();
 
     if (resources.globals.network === undefined) {
       throw new Error('Network not found.');
     }
 
-    return new Network(this);
+    return new NetworkAPI(this);
   }
 }

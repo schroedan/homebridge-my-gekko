@@ -1,11 +1,11 @@
 import { mock, MockProxy } from 'jest-mock-extended';
-import { API, Resources, Status } from './api';
-import { Blind } from './blind';
+import { BlindAPI } from './blind.api';
 import { Client, ReadRequest, Response } from './client';
-import { Meteo } from './meteo';
-import { Network } from './network';
+import { MeteoAPI } from './meteo.api';
+import { NetworkAPI } from './network.api';
+import { QueryAPI, Resources, Status } from './query.api';
 
-describe('API', () => {
+describe('Query API', () => {
   let response: MockProxy<Response>;
   let client: MockProxy<Client>;
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('API', () => {
     client.query.mockResolvedValue(response);
   });
   it('should provide client', () => {
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     expect(api.client).toBe(client);
   });
@@ -30,12 +30,12 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getResources()).resolves.toBe(resources);
   });
   it('should throw an error for invalid resources', async () => {
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getResources()).rejects.toThrow(
       'Invalid resources response.',
@@ -46,12 +46,12 @@ describe('API', () => {
 
     response.json.mockReturnValue(status);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getStatus()).resolves.toBe(status);
   });
   it('should throw an error for invalid status', async () => {
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getStatus()).rejects.toThrow('Invalid status response.');
   });
@@ -79,9 +79,11 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
-    await expect(api.getBlinds()).resolves.toEqual([new Blind(api, 'item0')]);
+    await expect(api.getBlinds()).resolves.toEqual([
+      new BlindAPI(api, 'item0'),
+    ]);
   });
   it('should throw an error for invalid blinds', async () => {
     const resources = mock<Resources>();
@@ -90,7 +92,7 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getBlinds()).rejects.toThrow('No blinds found.');
   });
@@ -118,10 +120,10 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getBlind('item0')).resolves.toEqual(
-      new Blind(api, 'item0'),
+      new BlindAPI(api, 'item0'),
     );
   });
   it('should throw an error for invalid blind', async () => {
@@ -131,7 +133,7 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getBlind('item0')).rejects.toThrow('Blind not found.');
   });
@@ -199,9 +201,9 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
-    await expect(api.getMeteo()).resolves.toEqual(new Meteo(api));
+    await expect(api.getMeteo()).resolves.toEqual(new MeteoAPI(api));
   });
   it('should throw an error for invalid meteo', async () => {
     const resources = mock<Resources>();
@@ -210,7 +212,7 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getMeteo()).rejects.toThrow('Meteo not found.');
   });
@@ -221,9 +223,9 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
-    await expect(api.getNetwork()).resolves.toEqual(new Network(api));
+    await expect(api.getNetwork()).resolves.toEqual(new NetworkAPI(api));
   });
   it('should throw an error for invalid network', async () => {
     const resources = mock<Resources>();
@@ -232,7 +234,7 @@ describe('API', () => {
 
     response.json.mockReturnValue(resources);
 
-    const api = new API(client);
+    const api = new QueryAPI(client);
 
     await expect(api.getNetwork()).rejects.toThrow('Network not found.');
   });

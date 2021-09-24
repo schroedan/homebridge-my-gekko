@@ -1,114 +1,172 @@
 import {
+  API,
   Characteristic as ServcieCharacteristic,
   Logging,
+  PlatformConfig,
   Service,
 } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { Blind as BlindAPI, BlindState, BlindSumState } from '../api';
-import { Container } from '../container';
+import { BlindAPI, BlindState, BlindSumState } from '../api';
 import { Delay } from '../delay';
-import { Platform } from '../platform';
+import { PlatformEventEmitter } from '../platform-events';
 import { BlindCharacteristics } from './blind.characteristics';
 
 describe('Blind Characteristics', () => {
-  let platform: MockProxy<Platform>;
-  let container: MockProxy<Container>;
+  let api: MockProxy<API>;
   let service: MockProxy<Service>;
-  let api: MockProxy<BlindAPI>;
+  let blind: MockProxy<BlindAPI>;
+  let config: MockProxy<PlatformConfig>;
+  let logger: MockProxy<Logging>;
+  let eventEmitter: MockProxy<PlatformEventEmitter>;
   beforeEach(() => {
-    platform = mock<Platform>({
-      log: mock<Logging>(),
-      config: {
-        delay: undefined,
-      },
-      api: {
-        hap: {
-          Characteristic: mock<typeof ServcieCharacteristic>(),
-        },
+    api = mock<API>({
+      hap: {
+        Characteristic: mock<typeof ServcieCharacteristic>(),
       },
     });
-    container = mock<Container>({ platform });
     service = mock<Service>();
-    api = mock<BlindAPI>();
+    blind = mock<BlindAPI>();
+    config = mock<PlatformConfig>();
+    logger = mock<Logging>();
+    eventEmitter = mock<PlatformEventEmitter>();
     jest.useFakeTimers();
   });
   afterEach(() => {
     jest.useRealTimers();
   });
-  it('should provide container, service and API', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+  it('should provide api, service, blind, config, logger and event emitter', () => {
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    expect(blind.container).toBe(container);
-    expect(blind.service).toBe(service);
-    expect(blind.api).toBe(api);
+    expect(characteristics.api).toBe(api);
+    expect(characteristics.service).toBe(service);
+    expect(characteristics.blind).toBe(blind);
+    expect(characteristics.config).toBe(config);
+    expect(characteristics.logger).toBe(logger);
+    expect(characteristics.eventEmitter).toBe(eventEmitter);
   });
   it('should provide name characteristic', () => {
     const name = mock<ServcieCharacteristic>();
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
     service.getCharacteristic.mockReturnValue(name);
 
-    expect(blind.name).toBe(name);
+    expect(characteristics.name).toBe(name);
     expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.Name,
+      api.hap.Characteristic.Name,
     );
   });
   it('should provide current position characteristic', () => {
     const currentPosition = mock<ServcieCharacteristic>();
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
     service.getCharacteristic.mockReturnValue(currentPosition);
 
-    expect(blind.currentPosition).toBe(currentPosition);
+    expect(characteristics.currentPosition).toBe(currentPosition);
     expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.CurrentPosition,
+      api.hap.Characteristic.CurrentPosition,
     );
   });
   it('should provide target position characteristic', () => {
     const targetPosition = mock<ServcieCharacteristic>();
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
     service.getCharacteristic.mockReturnValue(targetPosition);
 
-    expect(blind.targetPosition).toBe(targetPosition);
+    expect(characteristics.targetPosition).toBe(targetPosition);
     expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.TargetPosition,
+      api.hap.Characteristic.TargetPosition,
     );
   });
   it('should provide position state characteristic', () => {
     const positionState = mock<ServcieCharacteristic>();
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
     service.getCharacteristic.mockReturnValue(positionState);
 
-    expect(blind.positionState).toBe(positionState);
+    expect(characteristics.positionState).toBe(positionState);
     expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.PositionState,
+      api.hap.Characteristic.PositionState,
     );
   });
   it('should provide obstruction detected characteristic', () => {
     const obstructionDetected = mock<ServcieCharacteristic>();
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
     service.getCharacteristic.mockReturnValue(obstructionDetected);
 
-    expect(blind.obstructionDetected).toBe(obstructionDetected);
+    expect(characteristics.obstructionDetected).toBe(obstructionDetected);
     expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.ObstructionDetected,
+      api.hap.Characteristic.ObstructionDetected,
     );
   });
   it('should provide usher', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    expect(blind.usher).toBeInstanceOf(Delay);
+    expect(characteristics.usher).toBeInstanceOf(Delay);
   });
   it('should provide custom usher', () => {
-    platform.config.delay = 100;
+    config.delay = 100;
 
-    const blind = new BlindCharacteristics(container, service, api);
-    const usher = blind.usher;
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
+    const usher = characteristics.usher;
 
-    expect(blind.usher).toBe(usher);
+    expect(characteristics.usher).toBe(usher);
   });
   it('should register listeners', () => {
     const name = mock<ServcieCharacteristic>();
@@ -133,7 +191,7 @@ describe('Blind Characteristics', () => {
       return obstructionDetected;
     });
 
-    platform.onShutdown.mockImplementation((listener) => {
+    eventEmitter.onShutdown.mockImplementation((listener) => {
       listener();
     });
 
@@ -156,16 +214,23 @@ describe('Blind Characteristics', () => {
       .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
       .mockReturnValue(usher);
 
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.registerListeners();
+    characteristics.registerListeners();
 
     expect(name.onGet).toHaveBeenCalled();
     expect(currentPosition.onGet).toHaveBeenCalled();
     expect(targetPosition.onSet).toHaveBeenCalled();
     expect(positionState.onGet).toHaveBeenCalled();
     expect(obstructionDetected.onGet).toHaveBeenCalled();
-    expect(platform.onShutdown).toHaveBeenCalled();
+    expect(eventEmitter.onShutdown).toHaveBeenCalled();
   });
   it('should return name on get name', () => {
     const name = mock<ServcieCharacteristic>();
@@ -180,9 +245,16 @@ describe('Blind Characteristics', () => {
       .mockReturnValue(name);
 
     const getName = jest.spyOn(BlindCharacteristics.prototype, 'getName');
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.registerListeners();
+    characteristics.registerListeners();
 
     expect(getName).toHaveBeenCalled();
   });
@@ -202,14 +274,21 @@ describe('Blind Characteristics', () => {
       BlindCharacteristics.prototype,
       'getPosition',
     );
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.registerListeners();
+    characteristics.registerListeners();
 
     expect(getPosition).toHaveBeenCalled();
   });
   it('should apply position after a short delay on set target position', () => {
-    platform.config.delay = 100;
+    config.delay = 100;
 
     const targetPosition = mock<ServcieCharacteristic>();
 
@@ -226,9 +305,16 @@ describe('Blind Characteristics', () => {
       BlindCharacteristics.prototype,
       'setPosition',
     );
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.registerListeners();
+    characteristics.registerListeners();
 
     jest.advanceTimersByTime(100);
 
@@ -236,126 +322,210 @@ describe('Blind Characteristics', () => {
   });
 
   it('should update name', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.updateName('__name__');
+    characteristics.updateName('__name__');
 
     expect(service.updateCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.Name,
+      api.hap.Characteristic.Name,
       '__name__',
     );
   });
   it('should update current position', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.updateCurrentPosition('__position__');
+    characteristics.updateCurrentPosition('__position__');
 
     expect(service.updateCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.CurrentPosition,
+      api.hap.Characteristic.CurrentPosition,
       '__position__',
     );
   });
   it('should update target position', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.updateTargetPosition('__position__');
+    characteristics.updateTargetPosition('__position__');
 
     expect(service.updateCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.TargetPosition,
+      api.hap.Characteristic.TargetPosition,
       '__position__',
     );
   });
   it('should update position state', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.updatePositionState('__state__');
+    characteristics.updatePositionState('__state__');
 
     expect(service.updateCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.PositionState,
+      api.hap.Characteristic.PositionState,
       '__state__',
     );
   });
   it('should update obstruction detected', () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.updateObstructionDetected('__obstruction__');
+    characteristics.updateObstructionDetected('__obstruction__');
 
     expect(service.updateCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.ObstructionDetected,
+      api.hap.Characteristic.ObstructionDetected,
       '__obstruction__',
     );
   });
   it('should get name', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    api.getName.mockResolvedValue('__name__');
+    blind.getName.mockResolvedValue('__name__');
 
-    await expect(blind.getName()).resolves.toBe('__name__');
+    await expect(characteristics.getName()).resolves.toBe('__name__');
   });
   it('should get position', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    api.getPosition.mockResolvedValue(20.4);
+    blind.getPosition.mockResolvedValue(20.4);
 
-    await expect(blind.getPosition()).resolves.toBe(80);
+    await expect(characteristics.getPosition()).resolves.toBe(80);
   });
   it('should set position', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    await blind.setPosition(20.4);
+    await characteristics.setPosition(20.4);
 
-    expect(api.setPosition).toHaveBeenCalledWith(79.6);
+    expect(blind.setPosition).toHaveBeenCalledWith(79.6);
   });
   it('should get position state decreasing', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
-
-    api.getState.mockResolvedValue(BlindState.DOWN);
-
-    await expect(blind.getPositionState()).resolves.toBe(
-      platform.api.hap.Characteristic.PositionState.DECREASING,
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
     );
-    await expect(blind.isDecreasing()).resolves.toBeTruthy();
 
-    api.getState.mockResolvedValue(BlindState.HOLD_DOWN);
+    blind.getState.mockResolvedValue(BlindState.DOWN);
 
-    await expect(blind.getPositionState()).resolves.toBe(
-      platform.api.hap.Characteristic.PositionState.DECREASING,
+    await expect(characteristics.getPositionState()).resolves.toBe(
+      api.hap.Characteristic.PositionState.DECREASING,
     );
-    await expect(blind.isDecreasing()).resolves.toBeTruthy();
+    await expect(characteristics.isDecreasing()).resolves.toBeTruthy();
+
+    blind.getState.mockResolvedValue(BlindState.HOLD_DOWN);
+
+    await expect(characteristics.getPositionState()).resolves.toBe(
+      api.hap.Characteristic.PositionState.DECREASING,
+    );
+    await expect(characteristics.isDecreasing()).resolves.toBeTruthy();
   });
   it('should get position state increasing', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
-
-    api.getState.mockResolvedValue(BlindState.UP);
-
-    await expect(blind.getPositionState()).resolves.toBe(
-      platform.api.hap.Characteristic.PositionState.INCREASING,
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
     );
-    await expect(blind.isIncreasing()).resolves.toBeTruthy();
 
-    api.getState.mockResolvedValue(BlindState.HOLD_UP);
+    blind.getState.mockResolvedValue(BlindState.UP);
 
-    await expect(blind.getPositionState()).resolves.toBe(
-      platform.api.hap.Characteristic.PositionState.INCREASING,
+    await expect(characteristics.getPositionState()).resolves.toBe(
+      api.hap.Characteristic.PositionState.INCREASING,
     );
-    await expect(blind.isIncreasing()).resolves.toBeTruthy();
+    await expect(characteristics.isIncreasing()).resolves.toBeTruthy();
+
+    blind.getState.mockResolvedValue(BlindState.HOLD_UP);
+
+    await expect(characteristics.getPositionState()).resolves.toBe(
+      api.hap.Characteristic.PositionState.INCREASING,
+    );
+    await expect(characteristics.isIncreasing()).resolves.toBeTruthy();
   });
   it('should get position state stopped', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
-
-    api.getState.mockResolvedValue(BlindState.STOP);
-
-    await expect(blind.getPositionState()).resolves.toBe(
-      platform.api.hap.Characteristic.PositionState.STOPPED,
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
     );
-    await expect(blind.isStopped()).resolves.toBeTruthy();
+
+    blind.getState.mockResolvedValue(BlindState.STOP);
+
+    await expect(characteristics.getPositionState()).resolves.toBe(
+      api.hap.Characteristic.PositionState.STOPPED,
+    );
+    await expect(characteristics.isStopped()).resolves.toBeTruthy();
   });
   it('should get obstruction detected', async () => {
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    api.getSumState.mockResolvedValue(BlindSumState.LOCKED);
+    blind.getSumState.mockResolvedValue(BlindSumState.LOCKED);
 
-    await expect(blind.isObstructionDetected()).resolves.toBeTruthy();
+    await expect(characteristics.isObstructionDetected()).resolves.toBeTruthy();
   });
   it('should log error on set target position', async () => {
     const targetPosition = mock<ServcieCharacteristic>();
@@ -372,14 +542,21 @@ describe('Blind Characteristics', () => {
       .spyOn(BlindCharacteristics.prototype, 'setPosition')
       .mockRejectedValue('__reason__');
 
-    const blind = new BlindCharacteristics(container, service, api);
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    blind.registerListeners();
+    characteristics.registerListeners();
 
     jest.advanceTimersByTime(500);
 
     await new Promise(setImmediate);
 
-    expect(platform.log.error).toHaveBeenCalledWith('__reason__');
+    expect(logger.error).toHaveBeenCalledWith('__reason__');
   });
 });

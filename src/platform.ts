@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import {
   API,
   APIEvent,
@@ -14,128 +13,73 @@ export const PLUGIN_IDENTIFIER = 'homebridge-my-gekko';
 
 export const PLATFORM_NAME = 'mygekko';
 
-export const enum PlatformEventTypes {
-  /**
-   * This event is fired in the configured interval.
-   * At this stage all PlatformAccessories are already registered and ready!
-   */
-  HEARTBEAT = 'heartbeat',
-  /**
-   * This event is fired when homebridge got shutdown. This could be a regular shutdown or a unexpected crash.
-   * At this stage all Accessories are already unpublished and all PlatformAccessories are already saved to disk!
-   */
-  SHUTDOWN = 'shutdown',
-}
-
-export class Platform extends EventEmitter implements DynamicPlatformPlugin {
+export class Platform implements DynamicPlatformPlugin {
   private _accessories: PlatformAccessory[] = [];
-  private _container?: Container;
+  private _container: Container;
 
   get container(): Container {
-    if (this._container === undefined) {
-      this._container = new Container(this);
-    }
-
     return this._container;
   }
 
-  constructor(
-    readonly log: Logging,
-    readonly config: PlatformConfig,
-    readonly api: API,
-  ) {
-    super();
-
-    this.setMaxListeners(0);
+  constructor(logger: Logging, config: PlatformConfig, api: API) {
+    this._container = new Container(config, logger, api);
 
     try {
       this.validateConfig();
     } catch (error) {
-      this.log.error(error.message);
+      this.container.logger.error(error.message);
       return;
     }
 
     this.registerListeners();
 
-    this.log.info('Platform finished initializing');
+    this.container.logger.info('Platform finished initializing');
   }
 
   registerListeners(): void {
-    this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
+    this.container.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
       this.container.heartbeat.set(() => {
-        this.signalHeartbeat();
+        this.container.eventEmitter.signalHeartbeat();
       });
     });
 
-    this.api.on(APIEvent.SHUTDOWN, () => {
-      this.signalShutdown();
+    this.container.api.on(APIEvent.SHUTDOWN, () => {
+      this.container.eventEmitter.signalShutdown();
     });
 
-    this.onHeartbeat(() => {
+    this.container.eventEmitter.onHeartbeat(() => {
       this.discoverAccessories()
         .then((accessories) => {
           this.registerAccessories(accessories);
         })
         .catch((reason) => {
-          this.log.error(reason);
+          this.container.logger.error(reason);
         });
     });
 
-    this.onShutdown(() => {
+    this.container.eventEmitter.onShutdown(() => {
       this.container.heartbeat.clear();
     });
   }
 
   validateConfig(): void {
-    if (this.config.name === undefined) {
-      this.config.name = 'myGEKKO';
-    }
-
-    if (this.config.blinds === undefined) {
-      this.config.blinds = true;
-    }
-
-    if (this.config.meteo === undefined) {
-      this.config.meteo = true;
-    }
-
     if (
-      this.config.host === undefined ||
-      this.config.username === undefined ||
-      this.config.password === undefined
+      this.container.config.host === undefined ||
+      this.container.config.username === undefined ||
+      this.container.config.password === undefined
     ) {
       throw new Error('Platform config missing - please check the config file');
     }
   }
 
-  signalHeartbeat(): void {
-    this.emit(PlatformEventTypes.HEARTBEAT);
-  }
-
-  onHeartbeat(listener: () => void): void {
-    this.setMaxListeners(this.getMaxListeners() + 1);
-    this.on(PlatformEventTypes.HEARTBEAT, listener);
-  }
-
-  signalShutdown(): void {
-    this.emit(PlatformEventTypes.SHUTDOWN);
-  }
-
-  onShutdown(listener: () => void): void {
-    this.setMaxListeners(this.getMaxListeners() + 1);
-    this.on(PlatformEventTypes.SHUTDOWN, listener);
-  }
-
-  generateUUID(accessoryIdentifier: string): string {
-    return this.api.hap.uuid.generate(
-      `${PLUGIN_IDENTIFIER}/${accessoryIdentifier}`,
-    );
-  }
-
   async discoverAccessories(): Promise<PlatformAccessory[]> {
     return [
-      ...(this.config.blinds ? await this.discoverBlindAccessories() : []),
-      ...(this.config.meteo ? await this.discoverMeteoAccessories() : []),
+      ...(this.container.config.blinds
+        ? await this.discoverBlindAccessories()
+        : []),
+      ...(this.container.config.meteo
+        ? await this.discoverMeteoAccessories()
+        : []),
     ];
   }
 
@@ -179,7 +123,7 @@ export class Platform extends EventEmitter implements DynamicPlatformPlugin {
   }
 
   registerAccessories(accessories: PlatformAccessory[]): void {
-    this.api.registerPlatformAccessories(
+    this.container.api.registerPlatformAccessories(
       PLUGIN_IDENTIFIER,
       PLATFORM_NAME,
       accessories,
@@ -201,7 +145,7 @@ export class Platform extends EventEmitter implements DynamicPlatformPlugin {
           this._accessories.push(accessory);
         })
         .catch((reason) => {
-          this.log.error(reason);
+          this.container.logger.error(reason);
         });
       return;
     }
@@ -215,12 +159,12 @@ export class Platform extends EventEmitter implements DynamicPlatformPlugin {
           this._accessories.push(accessory);
         })
         .catch((reason) => {
-          this.log.error(reason);
+          this.container.logger.error(reason);
         });
       return;
     }
 
-    this.log.warn(
+    this.container.logger.warn(
       `Accessory category ${accessory.category} (type: ${accessory.context.type}) unknown to this platform`,
     );
   }

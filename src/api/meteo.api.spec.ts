@@ -1,8 +1,8 @@
 import { mock, MockProxy } from 'jest-mock-extended';
-import { API, Resources, Status } from './api';
-import { Meteo } from './meteo';
+import { MeteoAPI } from './meteo.api';
+import { QueryAPI, Resources, Status } from './query.api';
 
-describe('Meteo', () => {
+describe('Meteo API', () => {
   const resources: Resources = {
     globals: {
       meteo: {
@@ -95,17 +95,17 @@ describe('Meteo', () => {
       },
     },
   };
-  let api: MockProxy<API>;
+  let api: MockProxy<QueryAPI>;
   beforeEach(() => {
-    api = mock<API>();
+    api = mock<QueryAPI>();
   });
   it('should provide API', () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     expect(meteo.api).toBe(api);
   });
   it('should throw an error for invalid resource', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue({ globals: {} });
     api.getStatus.mockResolvedValue({ globals: {} });
@@ -113,7 +113,7 @@ describe('Meteo', () => {
     await expect(meteo.getTwilight()).rejects.toThrow('Invalid resource.');
   });
   it('should throw an error for invalid status', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue({ globals: {} });
@@ -121,7 +121,7 @@ describe('Meteo', () => {
     await expect(meteo.getTwilight()).rejects.toThrow('Invalid status.');
   });
   it('should get twilight', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
@@ -132,7 +132,7 @@ describe('Meteo', () => {
     });
   });
   it('should get humidity', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
@@ -143,7 +143,7 @@ describe('Meteo', () => {
     });
   });
   it('should get brightness', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
@@ -154,7 +154,7 @@ describe('Meteo', () => {
     });
   });
   it('should get wind', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
@@ -165,7 +165,7 @@ describe('Meteo', () => {
     });
   });
   it('should get temperature', async () => {
-    const meteo = new Meteo(api);
+    const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);

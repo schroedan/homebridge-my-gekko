@@ -1,28 +1,30 @@
+import { Logging, PlatformConfig } from 'homebridge';
 import { BlindCharacteristics } from '../characteristics';
-import { Container } from '../container';
+import { Interval } from '../interval';
+import { PlatformEventEmitter } from '../platform-events';
 
 export class BlindObserver {
   get allocationDeferred(): boolean {
-    const deferance = this.container.platform.config.deferance ?? 60;
-
     if (this.characteristics.usher.pending) {
       return true;
     }
 
     return (
-      this.container.heartbeat.timestamp -
-        this.characteristics.usher.timestamp <
-      deferance
+      this.heartbeat.timestamp - this.characteristics.usher.timestamp <
+      this.config.deferance
     );
   }
 
   constructor(
-    readonly container: Container,
     readonly characteristics: BlindCharacteristics,
+    readonly eventEmitter: PlatformEventEmitter,
+    readonly logger: Logging,
+    readonly heartbeat: Interval<() => void>,
+    readonly config: PlatformConfig,
   ) {}
 
   registerListeners(): void {
-    this.container.platform.onHeartbeat(() => {
+    this.eventEmitter.onHeartbeat(() => {
       Promise.all([
         this.updateName(),
         this.updateCurrentPosition(),
@@ -30,7 +32,7 @@ export class BlindObserver {
         this.updatePositionState(),
         this.updateObstructionDetected(),
       ]).catch((reason) => {
-        this.container.platform.log.error(reason);
+        this.logger.error(reason);
       });
     });
   }
@@ -43,9 +45,7 @@ export class BlindObserver {
       return;
     }
 
-    this.container.platform.log.debug(
-      `Updating name of blind ${name}: ${value}`,
-    );
+    this.logger.debug(`Updating name of blind ${name}: ${value}`);
 
     this.characteristics.updateName(value);
   }
@@ -61,7 +61,7 @@ export class BlindObserver {
       return;
     }
 
-    this.container.platform.log.debug(
+    this.logger.debug(
       `Updating current position of blind ${name}: ${value}% open`,
     );
 
@@ -79,7 +79,7 @@ export class BlindObserver {
       return;
     }
 
-    this.container.platform.log.debug(
+    this.logger.debug(
       `Updating target position of blind ${name}: ${value}% open`,
     );
 
@@ -98,17 +98,11 @@ export class BlindObserver {
     }
 
     if (await this.characteristics.isDecreasing()) {
-      this.container.platform.log.debug(
-        `Updating position state of blind ${name}: ↓`,
-      );
+      this.logger.debug(`Updating position state of blind ${name}: ↓`);
     } else if (await this.characteristics.isIncreasing()) {
-      this.container.platform.log.debug(
-        `Updating position state of blind ${name}: ↑`,
-      );
+      this.logger.debug(`Updating position state of blind ${name}: ↑`);
     } else {
-      this.container.platform.log.debug(
-        `Updating position state of blind ${name}: ↕`,
-      );
+      this.logger.debug(`Updating position state of blind ${name}: ↕`);
     }
 
     this.characteristics.updatePositionState(value);
@@ -123,13 +117,9 @@ export class BlindObserver {
     }
 
     if (value) {
-      this.container.platform.log.debug(
-        `Updating obstruction detected of blind ${name}: ✗`,
-      );
+      this.logger.debug(`Updating obstruction detected of blind ${name}: ✗`);
     } else {
-      this.container.platform.log.debug(
-        `Updating obstruction detected of blind ${name}: ✓`,
-      );
+      this.logger.debug(`Updating obstruction detected of blind ${name}: ✓`);
     }
 
     this.characteristics.updateObstructionDetected(value);

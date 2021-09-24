@@ -1,36 +1,34 @@
-import { PlatformAccessory, Service as PlatformService } from 'homebridge';
+import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { Blind as BlindAPI } from '../api';
-import { Container } from '../container';
+import { BlindAPI } from '../api';
+import { UUID } from '../uuid';
 import { BlindAccessoryFactory } from './blind.accessory.factory';
 
 describe('Blind Accessory Factory', () => {
-  let container: MockProxy<Container>;
+  let api: MockProxy<API>;
+  let uuid: MockProxy<UUID>;
   beforeEach(() => {
-    container = mock<Container>({
-      platform: {
-        api: {
-          hap: {
-            Service: mock<typeof PlatformService>(),
-          },
-          platformAccessory: jest
-            .fn()
-            .mockImplementation(() =>
-              mock<PlatformAccessory>(),
-            ) as unknown as typeof PlatformAccessory,
-        },
+    api = mock<API>({
+      hap: {
+        Service: mock<typeof PlatformService>(),
       },
+      platformAccessory: jest
+        .fn()
+        .mockImplementation(() =>
+          mock<PlatformAccessory>(),
+        ) as unknown as typeof PlatformAccessory,
     });
+    uuid = mock<UUID>();
   });
   it('should create accessory', async () => {
-    const api = mock<BlindAPI>({
+    const blind = mock<BlindAPI>({
       key: '__key__',
     });
 
-    api.getName.mockResolvedValue('__name__');
+    blind.getName.mockResolvedValue('__name__');
 
-    const blind = new BlindAccessoryFactory(container);
-    const accessory = await blind.createAccessory(api);
+    const factory = new BlindAccessoryFactory(api, uuid);
+    const accessory = await factory.createAccessory(blind);
 
     expect(accessory.context.key).toEqual('__key__');
     expect(accessory.context.type).toEqual('blind');

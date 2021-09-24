@@ -1,54 +1,49 @@
-import { Characteristic as ServcieCharacteristic, Service } from 'homebridge';
+import {
+  API,
+  Characteristic as ServcieCharacteristic,
+  Service,
+} from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { Meteo as MeteoAPI } from '../api';
-import { Container } from '../container';
-import { Platform } from '../platform';
+import { MeteoAPI } from '../api';
 import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteristics';
 
 describe('Meteo Temperature Characteristics', () => {
-  let platform: MockProxy<Platform>;
-  let container: MockProxy<Container>;
+  let api: MockProxy<API>;
   let service: MockProxy<Service>;
-  let api: MockProxy<MeteoAPI>;
+  let meteo: MockProxy<MeteoAPI>;
   beforeEach(() => {
-    platform = mock<Platform>({
-      config: {
-        delay: undefined,
-      },
-      api: {
-        hap: {
-          Characteristic: mock<typeof ServcieCharacteristic>(),
-        },
+    api = mock<API>({
+      hap: {
+        Characteristic: mock<typeof ServcieCharacteristic>(),
       },
     });
-    container = mock<Container>({ platform });
     service = mock<Service>();
-    api = mock<MeteoAPI>();
+    meteo = mock<MeteoAPI>();
   });
-  it('should provide container, service and API', () => {
-    const meteoTemperature = new MeteoTemperatureCharacteristics(
-      container,
-      service,
+  it('should provide api, service and meteo', () => {
+    const characteristics = new MeteoTemperatureCharacteristics(
       api,
+      service,
+      meteo,
     );
 
-    expect(meteoTemperature.container).toBe(container);
-    expect(meteoTemperature.service).toBe(service);
-    expect(meteoTemperature.api).toBe(api);
+    expect(characteristics.api).toBe(api);
+    expect(characteristics.service).toBe(service);
+    expect(characteristics.meteo).toBe(meteo);
   });
   it('should provide current temperature characteristic', () => {
     const currentTemperature = mock<ServcieCharacteristic>();
-    const meteoTemperature = new MeteoTemperatureCharacteristics(
-      container,
-      service,
+    const characteristics = new MeteoTemperatureCharacteristics(
       api,
+      service,
+      meteo,
     );
 
     service.getCharacteristic.mockReturnValue(currentTemperature);
 
-    expect(meteoTemperature.currentTemperature).toBe(currentTemperature);
+    expect(characteristics.currentTemperature).toBe(currentTemperature);
     expect(service.getCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.CurrentTemperature,
+      api.hap.Characteristic.CurrentTemperature,
     );
   });
   it('should register listeners', () => {
@@ -62,13 +57,13 @@ describe('Meteo Temperature Characteristics', () => {
       )
       .mockReturnValue(currentTemperature);
 
-    const meteoTemperature = new MeteoTemperatureCharacteristics(
-      container,
-      service,
+    const characteristics = new MeteoTemperatureCharacteristics(
       api,
+      service,
+      meteo,
     );
 
-    meteoTemperature.registerListeners();
+    characteristics.registerListeners();
 
     expect(currentTemperature.onGet).toHaveBeenCalled();
   });
@@ -92,42 +87,42 @@ describe('Meteo Temperature Characteristics', () => {
       MeteoTemperatureCharacteristics.prototype,
       'getTemperature',
     );
-    const meteoTemperature = new MeteoTemperatureCharacteristics(
-      container,
-      service,
+    const characteristics = new MeteoTemperatureCharacteristics(
       api,
+      service,
+      meteo,
     );
 
-    api.getTemperature.mockResolvedValue({ value: 20.5, unit: '°C' });
+    meteo.getTemperature.mockResolvedValue({ value: 20.5, unit: '°C' });
 
-    meteoTemperature.registerListeners();
+    characteristics.registerListeners();
 
     expect(getTemperature).toHaveBeenCalled();
   });
   it('should update current temperature', () => {
-    const meteoTemperature = new MeteoTemperatureCharacteristics(
-      container,
-      service,
+    const characteristics = new MeteoTemperatureCharacteristics(
       api,
+      service,
+      meteo,
     );
 
-    meteoTemperature.updateCurrentTemperature('__temperature__');
+    characteristics.updateCurrentTemperature('__temperature__');
 
     expect(service.updateCharacteristic).toHaveBeenCalledWith(
-      platform.api.hap.Characteristic.CurrentTemperature,
+      api.hap.Characteristic.CurrentTemperature,
       '__temperature__',
     );
   });
   it('should get temperature', async () => {
-    const meteoTemperature = new MeteoTemperatureCharacteristics(
-      container,
-      service,
+    const characteristics = new MeteoTemperatureCharacteristics(
       api,
+      service,
+      meteo,
     );
 
-    api.getTemperature.mockResolvedValue({ value: 20.5, unit: '°C' });
+    meteo.getTemperature.mockResolvedValue({ value: 20.5, unit: '°C' });
 
-    await expect(meteoTemperature.getTemperature()).resolves.toBe(20.5);
-    await expect(meteoTemperature.getUnit()).resolves.toBe('°C');
+    await expect(characteristics.getTemperature()).resolves.toBe(20.5);
+    await expect(characteristics.getUnit()).resolves.toBe('°C');
   });
 });

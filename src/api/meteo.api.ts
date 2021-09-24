@@ -1,4 +1,4 @@
-import { API } from './api';
+import { QueryAPI } from './query.api';
 
 export type MeteoResourceValue = {
   value: 'Act.Value';
@@ -39,8 +39,8 @@ export type MeteoDataValue = {
   unit: string;
 };
 
-export class Meteo {
-  constructor(readonly api: API) {}
+export class MeteoAPI {
+  constructor(readonly api: QueryAPI) {}
 
   protected async getResource(): Promise<MeteoResource> {
     const resources = await this.api.getResources();

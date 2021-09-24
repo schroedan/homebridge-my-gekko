@@ -1,22 +1,23 @@
 import {
+  API,
   Categories,
   PlatformAccessory,
   Service as PlatformService,
 } from 'homebridge';
-import { Container } from '../container';
+import { UUID } from '../uuid';
 
 let Accessory: typeof PlatformAccessory;
 let Service: typeof PlatformService;
 
 export class MeteoTemperatureAccessoryFactory {
-  constructor(readonly container: Container) {
-    Accessory = container.platform.api.platformAccessory;
-    Service = container.platform.api.hap.Service;
+  constructor(readonly api: API, readonly uuid: UUID) {
+    Accessory = api.platformAccessory;
+    Service = api.hap.Service;
   }
 
   async createAccessory(): Promise<PlatformAccessory> {
     const displayName = 'Meteo Temperature';
-    const uuid = this.container.platform.generateUUID('meteo/temperature');
+    const uuid = this.uuid.generate('meteo/temperature');
     const accessory = new Accessory(displayName, uuid, Categories.OTHER);
 
     accessory.context.type = 'meteo-temperature';

@@ -1,10 +1,10 @@
 import {
+  API,
   Characteristic as ServcieCharacteristic,
   CharacteristicValue,
   Service,
 } from 'homebridge';
-import { Meteo as MeteoAPI } from '../api';
-import { Container } from '../container';
+import { MeteoAPI } from '../api';
 
 let Characteristic: typeof ServcieCharacteristic;
 
@@ -14,11 +14,11 @@ export class MeteoTemperatureCharacteristics {
   }
 
   constructor(
-    readonly container: Container,
+    readonly api: API,
     readonly service: Service,
-    readonly api: MeteoAPI,
+    readonly meteo: MeteoAPI,
   ) {
-    Characteristic = container.platform.api.hap.Characteristic;
+    Characteristic = api.hap.Characteristic;
   }
 
   registerListeners(): void {
@@ -31,12 +31,12 @@ export class MeteoTemperatureCharacteristics {
   }
 
   async getTemperature(): Promise<CharacteristicValue> {
-    const data = await this.api.getTemperature();
+    const data = await this.meteo.getTemperature();
     return data.value;
   }
 
   async getUnit(): Promise<CharacteristicValue> {
-    const data = await this.api.getTemperature();
+    const data = await this.meteo.getTemperature();
     return data.unit;
   }
 }

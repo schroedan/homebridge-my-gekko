@@ -1,4 +1,4 @@
-import { API } from './api';
+import { QueryAPI } from './query.api';
 
 export type NetworkResource = unknown;
 
@@ -23,8 +23,8 @@ export enum NetworkLanguage {
   CS = '6',
 }
 
-export class Network {
-  constructor(readonly api: API) {}
+export class NetworkAPI {
+  constructor(readonly api: QueryAPI) {}
 
   protected async getStatus(): Promise<NetworkStatus> {
     const status = await this.api.getStatus();

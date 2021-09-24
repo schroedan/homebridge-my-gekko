@@ -1,49 +1,50 @@
 import { Logging } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { MeteoTemperatureCharacteristics } from '../characteristics';
-import { Container } from '../container';
-import { Platform } from '../platform';
+import { PlatformEventEmitter } from '../platform-events';
 import { MeteoTemperatureObserver } from './meteo-temperature.observer';
 
 describe('Meteo Temperature Observer', () => {
-  let platform: MockProxy<Platform>;
-  let container: MockProxy<Container>;
   let characteristics: MockProxy<MeteoTemperatureCharacteristics>;
+  let eventEmitter: MockProxy<PlatformEventEmitter>;
+  let logger: MockProxy<Logging>;
   beforeEach(() => {
-    platform = mock<Platform>({
-      log: mock<Logging>(),
+    characteristics = mock<MeteoTemperatureCharacteristics>();
+    eventEmitter = mock<PlatformEventEmitter>({
       onHeartbeat: (listener) => {
         listener();
       },
     });
-    container = mock<Container>({ platform });
-    characteristics = mock<MeteoTemperatureCharacteristics>();
+    logger = mock<Logging>();
   });
   afterEach(() => {
     jest.clearAllMocks();
   });
-  it('should provide container and characteristics', () => {
-    const meteoTemperature = new MeteoTemperatureObserver(
-      container,
+  it('should provide characteristics, event emitter and logger', () => {
+    const observer = new MeteoTemperatureObserver(
       characteristics,
+      eventEmitter,
+      logger,
     );
 
-    expect(meteoTemperature.container).toBe(container);
-    expect(meteoTemperature.characteristics).toBe(characteristics);
+    expect(observer.characteristics).toBe(characteristics);
+    expect(observer.eventEmitter).toBe(eventEmitter);
+    expect(observer.logger).toBe(logger);
   });
   it('should update current temperature on platform heartbeat', async () => {
-    const onHeartbeat = jest.spyOn(platform, 'onHeartbeat');
+    const onHeartbeat = jest.spyOn(eventEmitter, 'onHeartbeat');
     const updateCurrentTemperature = jest.spyOn(
       MeteoTemperatureObserver.prototype,
       'updateCurrentTemperature',
     );
 
-    const meteoTemperature = new MeteoTemperatureObserver(
-      container,
+    const observer = new MeteoTemperatureObserver(
       characteristics,
+      eventEmitter,
+      logger,
     );
 
-    meteoTemperature.registerListeners();
+    observer.registerListeners();
 
     expect(onHeartbeat).toHaveBeenCalled();
     expect(updateCurrentTemperature).toHaveBeenCalled();
@@ -52,14 +53,15 @@ describe('Meteo Temperature Observer', () => {
     characteristics.getTemperature.mockResolvedValue(20.5);
     characteristics.getUnit.mockResolvedValue('°C');
 
-    const meteoTemperature = new MeteoTemperatureObserver(
-      container,
+    const observer = new MeteoTemperatureObserver(
       characteristics,
+      eventEmitter,
+      logger,
     );
 
-    await meteoTemperature.updateCurrentTemperature();
+    await observer.updateCurrentTemperature();
 
-    expect(platform.log.debug).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'Updating current temperature of meteo: 20.5 °C',
     );
     expect(characteristics.updateCurrentTemperature).toHaveBeenCalledWith(20.5);
@@ -69,15 +71,16 @@ describe('Meteo Temperature Observer', () => {
       .spyOn(MeteoTemperatureObserver.prototype, 'updateCurrentTemperature')
       .mockRejectedValue('__reason__');
 
-    const meteoTemperature = new MeteoTemperatureObserver(
-      container,
+    const observer = new MeteoTemperatureObserver(
       characteristics,
+      eventEmitter,
+      logger,
     );
 
-    meteoTemperature.registerListeners();
+    observer.registerListeners();
 
     await new Promise(setImmediate);
 
-    expect(platform.log.error).toHaveBeenCalledWith('__reason__');
+    expect(logger.error).toHaveBeenCalledWith('__reason__');
   });
 });

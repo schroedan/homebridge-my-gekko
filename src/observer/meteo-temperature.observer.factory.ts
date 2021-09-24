@@ -1,13 +1,21 @@
+import { Logging } from 'homebridge';
 import { MeteoTemperatureCharacteristics } from '../characteristics';
-import { Container } from '../container';
+import { PlatformEventEmitter } from '../platform-events';
 import { MeteoTemperatureObserver } from './meteo-temperature.observer';
 
 export class MeteoTemperatureObserverFactory {
-  constructor(readonly container: Container) {}
+  constructor(
+    readonly eventEmitter: PlatformEventEmitter,
+    readonly logger: Logging,
+  ) {}
 
   createObserver(
     characteristics: MeteoTemperatureCharacteristics,
   ): MeteoTemperatureObserver {
-    return new MeteoTemperatureObserver(this.container, characteristics);
+    return new MeteoTemperatureObserver(
+      characteristics,
+      this.eventEmitter,
+      this.logger,
+    );
   }
 }

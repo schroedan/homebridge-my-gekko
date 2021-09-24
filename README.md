@@ -37,7 +37,7 @@ Add platform to `config.json`, for configuration see below.
       "meteo": true,
       "ttl": 1,
       "interval": 3,
-      "deferance": 60,
+      "deferance": 10,
       "delay": 500
     }
   ]

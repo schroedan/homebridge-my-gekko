@@ -1,11 +1,14 @@
 import {
+  API,
   Characteristic as ServcieCharacteristic,
   CharacteristicValue,
+  Logging,
+  PlatformConfig,
   Service,
 } from 'homebridge';
-import { Blind as BlindAPI, BlindState, BlindSumState } from '../api';
-import { Container } from '../container';
+import { BlindAPI, BlindState, BlindSumState } from '../api';
 import { Delay } from '../delay';
+import { PlatformEventEmitter } from '../platform-events';
 
 let Characteristic: typeof ServcieCharacteristic;
 
@@ -34,18 +37,21 @@ export class BlindCharacteristics {
 
   get usher(): Delay<() => void> {
     if (this._usher === undefined) {
-      this._usher = new Delay(this.container.platform.config.delay ?? 500);
+      this._usher = new Delay(this.config.delay);
     }
 
     return this._usher;
   }
 
   constructor(
-    readonly container: Container,
+    readonly api: API,
     readonly service: Service,
-    readonly api: BlindAPI,
+    readonly blind: BlindAPI,
+    readonly config: PlatformConfig,
+    readonly logger: Logging,
+    readonly eventEmitter: PlatformEventEmitter,
   ) {
-    Characteristic = container.platform.api.hap.Characteristic;
+    Characteristic = api.hap.Characteristic;
   }
 
   registerListeners(): void {
@@ -56,7 +62,7 @@ export class BlindCharacteristics {
     this.targetPosition.onSet((value: CharacteristicValue) => {
       this.usher.set(() => {
         this.setPosition(value).catch((reason) => {
-          this.container.platform.log.error(reason);
+          this.logger.error(reason);
         });
       });
     });
@@ -65,7 +71,7 @@ export class BlindCharacteristics {
 
     this.obstructionDetected.onGet(() => this.isObstructionDetected());
 
-    this.container.platform.onShutdown(() => {
+    this.eventEmitter.onShutdown(() => {
       this.usher.clear();
     });
   }
@@ -99,19 +105,19 @@ export class BlindCharacteristics {
   }
 
   async getName(): Promise<CharacteristicValue> {
-    return await this.api.getName();
+    return await this.blind.getName();
   }
 
   async getPosition(): Promise<CharacteristicValue> {
-    return Math.round(100 - (await this.api.getPosition()));
+    return Math.round(100 - (await this.blind.getPosition()));
   }
 
   async setPosition(value: CharacteristicValue): Promise<void> {
-    await this.api.setPosition(100 - Number(value));
+    await this.blind.setPosition(100 - Number(value));
   }
 
   async getPositionState(): Promise<CharacteristicValue> {
-    switch (await this.api.getState()) {
+    switch (await this.blind.getState()) {
       case BlindState.HOLD_DOWN:
       case BlindState.DOWN:
         return Characteristic.PositionState.DECREASING;
@@ -124,20 +130,20 @@ export class BlindCharacteristics {
   }
 
   async isDecreasing(): Promise<boolean> {
-    const state = await this.api.getState();
+    const state = await this.blind.getState();
     return state === BlindState.HOLD_DOWN || state === BlindState.DOWN;
   }
 
   async isIncreasing(): Promise<boolean> {
-    const state = await this.api.getState();
+    const state = await this.blind.getState();
     return state === BlindState.HOLD_UP || state === BlindState.UP;
   }
 
   async isStopped(): Promise<boolean> {
-    return (await this.api.getState()) === BlindState.STOP;
+    return (await this.blind.getState()) === BlindState.STOP;
   }
 
   async isObstructionDetected(): Promise<boolean> {
-    return BlindSumState.OK !== (await this.api.getSumState());
+    return BlindSumState.OK !== (await this.blind.getSumState());
   }
 }

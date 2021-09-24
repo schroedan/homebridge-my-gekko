@@ -1,19 +1,19 @@
-import { PlatformAccessory, Service as PlatformService } from 'homebridge';
-import { Container } from '../container';
+import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
+import { QueryAPI } from '../api';
 import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteristics';
 
 let Service: typeof PlatformService;
 
 export class MeteoTemperatureCharacteristicsFactory {
-  constructor(readonly container: Container) {
-    Service = container.platform.api.hap.Service;
+  constructor(readonly api: API, readonly queryAPI: QueryAPI) {
+    Service = api.hap.Service;
   }
 
   async createCharacteristics(
     accessory: PlatformAccessory,
   ): Promise<MeteoTemperatureCharacteristics> {
     const service = accessory.getService(Service.TemperatureSensor);
-    const meteo = await this.container.queryAPI.getMeteo();
+    const meteo = await this.queryAPI.getMeteo();
 
     if (service === undefined) {
       throw new Error('Service not found.');
@@ -23,6 +23,6 @@ export class MeteoTemperatureCharacteristicsFactory {
       throw new Error('Meteo not found.');
     }
 
-    return new MeteoTemperatureCharacteristics(this.container, service, meteo);
+    return new MeteoTemperatureCharacteristics(this.api, service, meteo);
   }
 }

@@ -1,38 +1,48 @@
 import {
+  API,
   Categories,
+  Logging,
   PlatformAccessory,
+  PlatformConfig,
   Service as PlatformService,
 } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { API as QueryAPI, Blind as BlindAPI } from '../api';
-import { Container } from '../container';
-import { BlindCharacteristics as BlindCharacteristics } from './blind.characteristics';
+import { BlindAPI, QueryAPI } from '../api';
+import { PlatformEventEmitter } from '../platform-events';
+import { BlindCharacteristics } from './blind.characteristics';
 import { BlindCharacteristicsFactory } from './blind.characteristics.factory';
 
 describe('Blind Characteristics Factory', () => {
+  let api: MockProxy<API>;
   let queryAPI: MockProxy<QueryAPI>;
-  let container: MockProxy<Container>;
+  let config: MockProxy<PlatformConfig>;
+  let logger: MockProxy<Logging>;
+  let eventEmitter: MockProxy<PlatformEventEmitter>;
   beforeEach(() => {
-    queryAPI = mock<QueryAPI>();
-    container = mock<Container>({
-      platform: {
-        api: {
-          hap: {
-            Service: mock<typeof PlatformService>(),
-          },
-        },
+    api = mock<API>({
+      hap: {
+        Service: mock<typeof PlatformService>(),
       },
-      queryAPI,
     });
+    queryAPI = mock<QueryAPI>();
+    config = mock<PlatformConfig>();
+    logger = mock<Logging>();
+    eventEmitter = mock<PlatformEventEmitter>();
   });
   it('should reject creation of characteristics for invalid service', async () => {
     const accessory = mock<PlatformAccessory>({
       category: Categories.WINDOW_COVERING,
     });
 
-    const blind = new BlindCharacteristicsFactory(container);
+    const factory = new BlindCharacteristicsFactory(
+      api,
+      queryAPI,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    await expect(blind.createCharacteristics(accessory)).rejects.toThrow(
+    await expect(factory.createCharacteristics(accessory)).rejects.toThrow(
       'Service not found.',
     );
   });
@@ -43,9 +53,15 @@ describe('Blind Characteristics Factory', () => {
 
     accessory.getService.mockReturnValue(mock<PlatformService>());
 
-    const blind = new BlindCharacteristicsFactory(container);
+    const factory = new BlindCharacteristicsFactory(
+      api,
+      queryAPI,
+      config,
+      logger,
+      eventEmitter,
+    );
 
-    await expect(blind.createCharacteristics(accessory)).rejects.toThrow(
+    await expect(factory.createCharacteristics(accessory)).rejects.toThrow(
       'Blind not found.',
     );
   });
@@ -57,10 +73,16 @@ describe('Blind Characteristics Factory', () => {
     accessory.getService.mockReturnValue(mock<PlatformService>());
     queryAPI.getBlind.mockResolvedValue(mock<BlindAPI>());
 
-    const blind = new BlindCharacteristicsFactory(container);
+    const factory = new BlindCharacteristicsFactory(
+      api,
+      queryAPI,
+      config,
+      logger,
+      eventEmitter,
+    );
 
     await expect(
-      blind.createCharacteristics(accessory),
+      factory.createCharacteristics(accessory),
     ).resolves.toBeInstanceOf(BlindCharacteristics);
   });
 });

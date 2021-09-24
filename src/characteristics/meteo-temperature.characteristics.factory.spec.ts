@@ -1,29 +1,24 @@
 import {
+  API,
   Categories,
   PlatformAccessory,
   Service as PlatformService,
 } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { API as QueryAPI, Meteo as MeteoAPI } from '../api';
-import { Container } from '../container';
+import { MeteoAPI, QueryAPI } from '../api';
 import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteristics';
 import { MeteoTemperatureCharacteristicsFactory } from './meteo-temperature.characteristics.factory';
 
 describe('Meteo Temperature Characteristics Factory', () => {
+  let api: MockProxy<API>;
   let queryAPI: MockProxy<QueryAPI>;
-  let container: MockProxy<Container>;
   beforeEach(() => {
-    queryAPI = mock<QueryAPI>();
-    container = mock<Container>({
-      platform: {
-        api: {
-          hap: {
-            Service: mock<typeof PlatformService>(),
-          },
-        },
+    api = mock<API>({
+      hap: {
+        Service: mock<typeof PlatformService>(),
       },
-      queryAPI,
     });
+    queryAPI = mock<QueryAPI>();
   });
   it('should reject creation of characteristics for invalid service', async () => {
     const accessory = mock<PlatformAccessory>({
@@ -31,7 +26,8 @@ describe('Meteo Temperature Characteristics Factory', () => {
     });
 
     const meteoTemperature = new MeteoTemperatureCharacteristicsFactory(
-      container,
+      api,
+      queryAPI,
     );
 
     await expect(
@@ -46,7 +42,8 @@ describe('Meteo Temperature Characteristics Factory', () => {
     accessory.getService.mockReturnValue(mock<PlatformService>());
 
     const meteoTemperature = new MeteoTemperatureCharacteristicsFactory(
-      container,
+      api,
+      queryAPI,
     );
 
     await expect(
@@ -62,7 +59,8 @@ describe('Meteo Temperature Characteristics Factory', () => {
     queryAPI.getMeteo.mockResolvedValue(mock<MeteoAPI>());
 
     const meteoTemperature = new MeteoTemperatureCharacteristicsFactory(
-      container,
+      api,
+      queryAPI,
     );
 
     await expect(

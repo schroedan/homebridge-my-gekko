@@ -56,7 +56,7 @@
       "deferance": {
         "title": "Update deferance after allocation in seconds",
         "type": "number",
-        "placeholder": 60
+        "placeholder": 10
       },
       "delay": {
         "title": "Allocation delay in milliseconds",

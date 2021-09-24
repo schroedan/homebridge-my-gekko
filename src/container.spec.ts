@@ -1,10 +1,15 @@
-import { Service as PlatformService } from 'homebridge';
+import {
+  API,
+  Logging,
+  PlatformConfig,
+  Service as PlatformService,
+} from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
 import {
   BlindAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
-import { API as QueryAPI, Client, LocalConnection, MemoryCache } from './api';
+import { Client, LocalConnection, MemoryCache, QueryAPI } from './api';
 import {
   BlindCharacteristicsFactory,
   MeteoTemperatureCharacteristicsFactory,
@@ -15,41 +20,41 @@ import {
   BlindObserverFactory,
   MeteoTemperatureObserverFactory,
 } from './observer';
-import { Platform } from './platform';
+import { PlatformEventEmitter } from './platform-events';
+import { UUID } from './uuid';
 
 describe('Container', () => {
-  let platform: MockProxy<Platform>;
+  let config: MockProxy<PlatformConfig>;
+  let logger: MockProxy<Logging>;
+  let api: MockProxy<API>;
   beforeEach(() => {
-    platform = mock<Platform>({
-      config: {
-        host: '__host__',
-        username: '__userbane__',
-        password: '__password__',
-        ttl: undefined,
-        interval: undefined,
-        delay: undefined,
-      },
-      api: {
-        hap: {
-          Service: mock<typeof PlatformService>(),
-        },
+    config = mock<PlatformConfig>({
+      host: '__host__',
+      username: '__userbane__',
+      password: '__password__',
+    });
+    logger = mock<Logging>();
+    api = mock<API>({
+      hap: {
+        Service: mock<typeof PlatformService>(),
       },
     });
   });
-  it('should provide platform', () => {
-    const container = new Container(platform);
+  it('should provide logger and api', () => {
+    const container = new Container(config, logger, api);
 
-    expect(container.platform).toBe(platform);
+    expect(container.logger).toBe(logger);
+    expect(container.api).toBe(api);
   });
   it('should provide blind accessory factory', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const blindAccessoryFactory = container.blindAccessoryFactory;
 
     expect(blindAccessoryFactory).toBeInstanceOf(BlindAccessoryFactory);
     expect(container.blindAccessoryFactory).toBe(blindAccessoryFactory);
   });
   it('should provide blind characteristics factory', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const blindCharacteristicsFactory = container.blindCharacteristicsFactory;
 
     expect(blindCharacteristicsFactory).toBeInstanceOf(
@@ -60,51 +65,69 @@ describe('Container', () => {
     );
   });
   it('should provide blind observer factory', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const blindObserverFactory = container.blindObserverFactory;
 
     expect(blindObserverFactory).toBeInstanceOf(BlindObserverFactory);
     expect(container.blindObserverFactory).toBe(blindObserverFactory);
   });
   it('should provide client', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const client = container.client;
 
     expect(client).toBeInstanceOf(Client);
     expect(container.client).toBe(client);
   });
   it('should provide memory cache with custom TTL as client cache', () => {
-    platform.config.ttl = 10;
+    config.ttl = 10;
 
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const clientCache = container.clientCache;
 
     expect(clientCache).toBeInstanceOf(MemoryCache);
     expect(container.clientCache).toBe(clientCache);
   });
   it('should provide local connection as client connection', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const clientConnection = container.clientConnection;
 
     expect(clientConnection).toBeInstanceOf(LocalConnection);
     expect(container.clientConnection).toBe(clientConnection);
   });
+  it('should provide platform config with defaults', () => {
+    const container = new Container(config, logger, api);
+
+    expect(container.config.name).toBe('myGEKKO');
+    expect(container.config.blinds).toBe(true);
+    expect(container.config.meteo).toBe(true);
+    expect(container.config.ttl).toBe(1);
+    expect(container.config.interval).toBe(3);
+    expect(container.config.deferance).toBe(10);
+    expect(container.config.delay).toBe(500);
+  });
+  it('should provide platform event emitter', () => {
+    const container = new Container(config, logger, api);
+    const eventEmitter = container.eventEmitter;
+
+    expect(eventEmitter).toBeInstanceOf(PlatformEventEmitter);
+    expect(container.eventEmitter).toBe(eventEmitter);
+  });
   it('should provide heartbeat', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const heartbeat = container.heartbeat;
 
     expect(heartbeat).toBeInstanceOf(Interval);
     expect(container.heartbeat).toBe(heartbeat);
   });
   it('should provide heartbeat with custom interval', () => {
-    platform.config.interval = 10;
+    config.interval = 10;
 
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
 
     expect(container.heartbeat.interval).toBe(10000);
   });
   it('should provide meteo temperature accessory factory', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const meteoTemperatureAccessoryFactory =
       container.meteoTemperatureAccessoryFactory;
 
@@ -116,7 +139,7 @@ describe('Container', () => {
     );
   });
   it('should provide meteo temperature characteristics factory', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const meteoTemperatureCharacteristicsFactory =
       container.meteoTemperatureCharacteristicsFactory;
 
@@ -128,7 +151,7 @@ describe('Container', () => {
     );
   });
   it('should provide meteo temperature observer factory', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const meteoTemperatureObserverFactory =
       container.meteoTemperatureObserverFactory;
 
@@ -140,10 +163,17 @@ describe('Container', () => {
     );
   });
   it('should provide query API', () => {
-    const container = new Container(platform);
+    const container = new Container(config, logger, api);
     const queryAPI = container.queryAPI;
 
     expect(queryAPI).toBeInstanceOf(QueryAPI);
     expect(container.queryAPI).toBe(queryAPI);
+  });
+  it('should provide UUID', () => {
+    const container = new Container(config, logger, api);
+    const uuid = container.uuid;
+
+    expect(uuid).toBeInstanceOf(UUID);
+    expect(container.uuid).toBe(uuid);
   });
 });

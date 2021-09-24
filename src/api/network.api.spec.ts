@@ -1,8 +1,8 @@
 import { mock, MockProxy } from 'jest-mock-extended';
-import { API, Status } from './api';
-import { Network, NetworkLanguage } from './network';
+import { NetworkAPI, NetworkLanguage } from './network.api';
+import { QueryAPI, Status } from './query.api';
 
-describe('Network', () => {
+describe('Network API', () => {
   const status: Status = {
     globals: {
       network: {
@@ -21,45 +21,45 @@ describe('Network', () => {
       },
     },
   };
-  let api: MockProxy<API>;
+  let api: MockProxy<QueryAPI>;
   beforeEach(() => {
-    api = mock<API>();
+    api = mock<QueryAPI>();
   });
   it('should provide API', () => {
-    const network = new Network(api);
+    const network = new NetworkAPI(api);
 
     expect(network.api).toBe(api);
   });
   it('should throw an error for invalid status', async () => {
-    const network = new Network(api);
+    const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue({ globals: {} });
 
     await expect(network.getHostname()).rejects.toThrow('Invalid status.');
   });
   it('should get hostname', async () => {
-    const network = new Network(api);
+    const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
 
     await expect(network.getHostname()).resolves.toEqual('mygekko');
   });
   it('should get humidity', async () => {
-    const network = new Network(api);
+    const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
 
     await expect(network.getLanguage()).resolves.toEqual(NetworkLanguage.EN);
   });
   it('should get brightness', async () => {
-    const network = new Network(api);
+    const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
 
     await expect(network.getSoftwareVersion()).resolves.toEqual('123');
   });
   it('should get wind', async () => {
-    const network = new Network(api);
+    const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
 

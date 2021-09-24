@@ -1,16 +1,18 @@
+import { Logging } from 'homebridge';
 import { MeteoTemperatureCharacteristics } from '../characteristics';
-import { Container } from '../container';
+import { PlatformEventEmitter } from '../platform-events';
 
 export class MeteoTemperatureObserver {
   constructor(
-    readonly container: Container,
     readonly characteristics: MeteoTemperatureCharacteristics,
+    readonly eventEmitter: PlatformEventEmitter,
+    readonly logger: Logging,
   ) {}
 
   registerListeners(): void {
-    this.container.platform.onHeartbeat(() => {
+    this.eventEmitter.onHeartbeat(() => {
       this.updateCurrentTemperature().catch((reason) => {
-        this.container.platform.log.error(reason);
+        this.logger.error(reason);
       });
     });
   }
@@ -23,7 +25,7 @@ export class MeteoTemperatureObserver {
       return;
     }
 
-    this.container.platform.log.debug(
+    this.logger.debug(
       `Updating current temperature of meteo: ${value} ${unit}`,
     );
 

@@ -1,29 +1,27 @@
-import { PlatformAccessory, Service as PlatformService } from 'homebridge';
+import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { Container } from '../container';
+import { UUID } from '../uuid';
 import { MeteoTemperatureAccessoryFactory } from './meteo-temperature.accessory.factory';
 
 describe('Meteo Temperature Accessory Factory', () => {
-  let container: MockProxy<Container>;
+  let api: MockProxy<API>;
+  let uuid: MockProxy<UUID>;
   beforeEach(() => {
-    container = mock<Container>({
-      platform: {
-        api: {
-          hap: {
-            Service: mock<typeof PlatformService>(),
-          },
-          platformAccessory: jest
-            .fn()
-            .mockImplementation(() =>
-              mock<PlatformAccessory>(),
-            ) as unknown as typeof PlatformAccessory,
-        },
+    api = mock<API>({
+      hap: {
+        Service: mock<typeof PlatformService>(),
       },
+      platformAccessory: jest
+        .fn()
+        .mockImplementation(() =>
+          mock<PlatformAccessory>(),
+        ) as unknown as typeof PlatformAccessory,
     });
+    uuid = mock<UUID>();
   });
   it('should create accessory', async () => {
-    const meteoTemperature = new MeteoTemperatureAccessoryFactory(container);
-    const accessory = await meteoTemperature.createAccessory();
+    const factory = new MeteoTemperatureAccessoryFactory(api, uuid);
+    const accessory = await factory.createAccessory();
 
     expect(accessory.context.type).toEqual('meteo-temperature');
   });
