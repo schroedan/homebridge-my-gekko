@@ -48,11 +48,12 @@ describe('Platform', () => {
         },
       },
     });
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
   });
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
+    jest.clearAllMocks();
   });
   it('should provide container', () => {
     const platform = new Platform(log, config, api);

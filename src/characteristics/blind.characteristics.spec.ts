@@ -29,9 +29,10 @@ describe('Blind Characteristics', () => {
     config = mock<PlatformConfig>();
     logger = mock<Logging>();
     eventEmitter = mock<PlatformEventEmitter>();
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
   });
   afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
   it('should provide api, service, blind, config, logger and event emitter', () => {
