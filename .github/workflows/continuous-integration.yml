@@ -59,8 +59,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       NODE_VERSION: 18.x
+      YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
       - name: Checkout repository
