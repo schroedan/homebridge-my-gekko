@@ -15,9 +15,9 @@ jobs:
     strategy:
       matrix:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-          - 12.x
           - 14.x
           - 16.x
+          - 18.x
 
     steps:
       - name: Checkout repository
@@ -60,7 +60,7 @@ jobs:
 
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NODE_VERSION: 16.x
+      NODE_VERSION: 18.x
 
     steps:
       - name: Checkout repository

@@ -3,7 +3,7 @@ import { Delay } from './delay';
 describe('Delay', () => {
   beforeEach(() => {
     Date.now = jest.fn(() => 1487076708000);
-    jest.useFakeTimers('legacy');
+    jest.useFakeTimers();
   });
   afterEach(() => {
     jest.runOnlyPendingTimers();

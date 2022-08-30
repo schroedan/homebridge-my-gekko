@@ -35,8 +35,8 @@ describe('uncached query', () => {
     const promise = uncached(request);
 
     await expect(promise).resolves.toEqual(new Response(request, '__data__'));
-    expect(receive).toBeCalledTimes(1);
-    expect(get).toBeCalledTimes(1);
+    expect(receive).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledTimes(1);
   });
   it('should execute HTTP query and reject receive error', async () => {
     const request = mock<Request>();
@@ -53,7 +53,7 @@ describe('uncached query', () => {
     const promise = uncached(request);
 
     await expect(promise).rejects.toEqual('__error__');
-    expect(receive).toBeCalledTimes(1);
-    expect(get).toBeCalledTimes(1);
+    expect(receive).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledTimes(1);
   });
 });

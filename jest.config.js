@@ -11,6 +11,9 @@ module.exports = {
       statements: 100,
     },
   },
+  fakeTimers: {
+    legacyFakeTimers: true,
+  },
   preset: 'ts-jest',
   testEnvironment: 'node',
 };

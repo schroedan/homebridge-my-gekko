@@ -26,8 +26,8 @@ describe('Client', () => {
     client.useCache(mock<Cache>());
     client.query(client.readRequest());
 
-    expect(cachedSpy).toBeCalledTimes(1);
-    expect(uncachedSpy).not.toBeCalled();
+    expect(cachedSpy).toHaveBeenCalledTimes(1);
+    expect(uncachedSpy).not.toHaveBeenCalled();
   });
   it('should execute uncached query for write request', () => {
     const connection = mock<Connection>();
@@ -36,8 +36,8 @@ describe('Client', () => {
     client.useCache(mock<Cache>());
     client.query(client.writeRequest());
 
-    expect(cachedSpy).not.toBeCalled();
-    expect(uncachedSpy).toBeCalledTimes(1);
+    expect(cachedSpy).not.toHaveBeenCalled();
+    expect(uncachedSpy).toHaveBeenCalledTimes(1);
   });
   it('should execute uncached query when cache was not passed', () => {
     const connection = mock<Connection>();
@@ -45,7 +45,7 @@ describe('Client', () => {
 
     client.query(client.readRequest());
 
-    expect(cachedSpy).not.toBeCalled();
-    expect(uncachedSpy).toBeCalledTimes(1);
+    expect(cachedSpy).not.toHaveBeenCalled();
+    expect(uncachedSpy).toHaveBeenCalledTimes(1);
   });
 });

@@ -48,7 +48,7 @@ describe('Platform', () => {
         },
       },
     });
-    jest.useFakeTimers('legacy');
+    jest.useFakeTimers();
   });
   afterEach(() => {
     jest.runOnlyPendingTimers();
@@ -79,7 +79,7 @@ describe('Platform', () => {
 
     new Platform(log, config, api);
 
-    expect(log.error).toBeCalledWith(
+    expect(log.error).toHaveBeenCalledWith(
       'Platform config missing - please check the config file',
     );
   });

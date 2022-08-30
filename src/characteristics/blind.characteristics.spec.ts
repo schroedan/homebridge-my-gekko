@@ -29,7 +29,7 @@ describe('Blind Characteristics', () => {
     config = mock<PlatformConfig>();
     logger = mock<Logging>();
     eventEmitter = mock<PlatformEventEmitter>();
-    jest.useFakeTimers('legacy');
+    jest.useFakeTimers();
   });
   afterEach(() => {
     jest.runOnlyPendingTimers();

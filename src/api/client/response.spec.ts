@@ -30,7 +30,7 @@ describe('Response', () => {
     response.json();
     response.json();
 
-    expect(parse).toBeCalledTimes(1);
+    expect(parse).toHaveBeenCalledTimes(1);
   });
   it('should not parse JSON when response is OK', () => {
     const request = mock<Request>();

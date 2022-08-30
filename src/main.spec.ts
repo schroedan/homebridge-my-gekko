@@ -11,7 +11,7 @@ describe('Main', () => {
   it('should register platform', () => {
     main(api);
 
-    expect(api.registerPlatform).toBeCalledWith(
+    expect(api.registerPlatform).toHaveBeenCalledWith(
       PLUGIN_IDENTIFIER,
       PLATFORM_NAME,
       Platform,

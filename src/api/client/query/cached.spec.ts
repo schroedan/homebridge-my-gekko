@@ -31,6 +31,6 @@ describe('cached query', () => {
     const promise = cached(request, cache);
 
     await expect(promise).resolves.toEqual(response);
-    expect(uncached).toBeCalledTimes(1);
+    expect(uncached).toHaveBeenCalledTimes(1);
   });
 });
