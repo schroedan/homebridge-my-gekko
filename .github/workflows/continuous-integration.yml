@@ -31,7 +31,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --silent
+        run: yarn install --immutable
 
       - name: Lint source code
         run: yarn lint
@@ -74,7 +74,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --silent
+        run: yarn install --immutable
 
       - name: Publish package
-        run: yarn publish
+        run: yarn npm publish
