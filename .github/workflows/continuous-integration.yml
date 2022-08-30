@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: ${{ matrix.node-version }}
@@ -42,7 +42,7 @@ jobs:
           echo "COVERAGE=$(jq .total.lines.pct coverage/coverage-summary.json)" >> $GITHUB_ENV
 
       - name: Update coverage badge
-        uses: schneegans/dynamic-badges-action@v1.1.0
+        uses: schneegans/dynamic-badges-action@v1
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: 4136c781b460695ffcbf3dd43f5b82bc
@@ -64,10 +64,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: ${{ env.NODE_VERSION }}
