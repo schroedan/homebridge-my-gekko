@@ -104,6 +104,7 @@ export class Platform implements DynamicPlatformPlugin {
   async discoverMeteoAccessories(): Promise<PlatformAccessory[]> {
     const accessories: PlatformAccessory[] = [];
     const meteoAccessories = [
+      await this.container.meteoBrightnessAccessoryFactory.createAccessory(),
       await this.container.meteoTemperatureAccessoryFactory.createAccessory(),
     ];
 
@@ -148,18 +149,28 @@ export class Platform implements DynamicPlatformPlugin {
       return;
     }
 
-    if (
-      accessory.category === Categories.OTHER &&
-      accessory.context.type === 'meteo-temperature'
-    ) {
-      this.configureMeteoTemperatureAccessory(accessory)
-        .then(() => {
-          this._accessories.push(accessory);
-        })
-        .catch((reason) => {
-          this.container.logger.error(reason);
-        });
-      return;
+    if (accessory.category === Categories.OTHER) {
+      if (accessory.context.type === 'meteo-brightness') {
+        this.configureMeteoBrightnessAccessory(accessory)
+          .then(() => {
+            this._accessories.push(accessory);
+          })
+          .catch((reason) => {
+            this.container.logger.error(reason);
+          });
+        return;
+      }
+
+      if (accessory.context.type === 'meteo-temperature') {
+        this.configureMeteoTemperatureAccessory(accessory)
+          .then(() => {
+            this._accessories.push(accessory);
+          })
+          .catch((reason) => {
+            this.container.logger.error(reason);
+          });
+        return;
+      }
     }
 
     this.container.logger.warn(
@@ -180,6 +191,24 @@ export class Platform implements DynamicPlatformPlugin {
     await observer.updateTargetPosition();
     await observer.updatePositionState();
     await observer.updateObstructionDetected();
+
+    characteristics.registerListeners();
+    observer.registerListeners();
+  }
+
+  async configureMeteoBrightnessAccessory(
+    accessory: PlatformAccessory,
+  ): Promise<void> {
+    const characteristics =
+      await this.container.meteoBrightnessCharacteristicsFactory.createCharacteristics(
+        accessory,
+      );
+    const observer =
+      this.container.meteoBrightnessObserverFactory.createObserver(
+        characteristics,
+      );
+
+    await observer.updateCurrentAmbientLightLevel();
 
     characteristics.registerListeners();
     observer.registerListeners();

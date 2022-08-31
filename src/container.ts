@@ -3,6 +3,7 @@ import {
   BlindAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
+import { MeteoBrightnessAccessoryFactory } from './accessory/meteo-brightness.accessory.factory';
 import {
   Cache,
   Client,
@@ -15,9 +16,11 @@ import {
   BlindCharacteristicsFactory,
   MeteoTemperatureCharacteristicsFactory,
 } from './characteristics';
+import { MeteoBrightnessCharacteristicsFactory } from './characteristics/meteo-brightness.characteristics.factory';
 import { Interval } from './interval';
 import {
   BlindObserverFactory,
+  MeteoBrightnessObserverFactory,
   MeteoTemperatureObserverFactory,
 } from './observer';
 import { PlatformEventEmitter } from './platform-events';
@@ -33,6 +36,9 @@ export class Container {
   private _config: PlatformConfig;
   private _eventEmitter?: PlatformEventEmitter;
   private _heartbeat?: Interval<() => void>;
+  private _meteoBrightnessAccessoryFactory?: MeteoBrightnessAccessoryFactory;
+  private _meteoBrightnessCharacteristicsFactory?: MeteoBrightnessCharacteristicsFactory;
+  private _meteoBrightnessObserverFactory?: MeteoBrightnessObserverFactory;
   private _meteoTemperatureAccessoryFactory?: MeteoTemperatureAccessoryFactory;
   private _meteoTemperatureCharacteristicsFactory?: MeteoTemperatureCharacteristicsFactory;
   private _meteoTemperatureObserverFactory?: MeteoTemperatureObserverFactory;
@@ -147,6 +153,35 @@ export class Container {
     }
 
     return this._heartbeat;
+  }
+
+  get meteoBrightnessAccessoryFactory(): MeteoBrightnessAccessoryFactory {
+    if (this._meteoBrightnessAccessoryFactory === undefined) {
+      this._meteoBrightnessAccessoryFactory =
+        new MeteoBrightnessAccessoryFactory(this.api, this.uuid);
+    }
+
+    return this._meteoBrightnessAccessoryFactory;
+  }
+
+  get meteoBrightnessCharacteristicsFactory(): MeteoBrightnessCharacteristicsFactory {
+    if (this._meteoBrightnessCharacteristicsFactory === undefined) {
+      this._meteoBrightnessCharacteristicsFactory =
+        new MeteoBrightnessCharacteristicsFactory(this.api, this.queryAPI);
+    }
+
+    return this._meteoBrightnessCharacteristicsFactory;
+  }
+
+  get meteoBrightnessObserverFactory(): MeteoBrightnessObserverFactory {
+    if (this._meteoBrightnessObserverFactory === undefined) {
+      this._meteoBrightnessObserverFactory = new MeteoBrightnessObserverFactory(
+        this.eventEmitter,
+        this.logger,
+      );
+    }
+
+    return this._meteoBrightnessObserverFactory;
   }
 
   get meteoTemperatureAccessoryFactory(): MeteoTemperatureAccessoryFactory {

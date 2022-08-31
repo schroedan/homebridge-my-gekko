@@ -81,13 +81,33 @@ export class MeteoAPI {
     };
   }
 
-  async getBrightness(): Promise<MeteoDataValue> {
+  async getSouthBrightness(): Promise<MeteoDataValue> {
     const resource = await this.getResource();
     const status = await this.getStatus();
 
     return {
       value: Number(status.brightness.value),
       unit: this.convertFormatToUnit(resource.brightness.format),
+    };
+  }
+
+  async getWestBrightness(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
+
+    return {
+      value: Number(status.brightnessw.value),
+      unit: this.convertFormatToUnit(resource.brightnessw.format),
+    };
+  }
+
+  async getEastBrightness(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
+
+    return {
+      value: Number(status.brightnesso.value),
+      unit: this.convertFormatToUnit(resource.brightnesso.format),
     };
   }
 

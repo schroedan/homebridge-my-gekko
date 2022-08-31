@@ -10,12 +10,15 @@ import {
 import { mock, MockProxy } from 'jest-mock-extended';
 import {
   BlindAccessoryFactory,
+  MeteoBrightnessAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
 import { BlindAPI, MeteoAPI, QueryAPI } from './api';
 import {
   BlindCharacteristics,
   BlindCharacteristicsFactory,
+  MeteoBrightnessCharacteristics,
+  MeteoBrightnessCharacteristicsFactory,
   MeteoTemperatureCharacteristics,
   MeteoTemperatureCharacteristicsFactory,
 } from './characteristics';
@@ -24,6 +27,8 @@ import { Interval } from './interval';
 import {
   BlindObserver,
   BlindObserverFactory,
+  MeteoBrightnessObserver,
+  MeteoBrightnessObserverFactory,
   MeteoTemperatureObserver,
   MeteoTemperatureObserverFactory,
 } from './observer';
@@ -247,6 +252,61 @@ describe('Platform', () => {
     expect(blindCharacteristics.registerListeners).toHaveBeenCalled();
     expect(blindObserver.registerListeners).toHaveBeenCalled();
   });
+  it('should update characteristics and register listeners when configuring meteo brightness accessory', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+    const queryAPI = mock<QueryAPI>();
+    const meteo = mock<MeteoAPI>();
+    const meteoBrightnessCharacteristicsFactory =
+      mock<MeteoBrightnessCharacteristicsFactory>();
+    const meteoBrightnessCharacteristics =
+      mock<MeteoBrightnessCharacteristics>();
+    const meteoBrightnessObserverFactory =
+      mock<MeteoBrightnessObserverFactory>();
+    const meteoBrightnessObserver = mock<MeteoBrightnessObserver>();
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.WINDOW_COVERING,
+    });
+
+    getContainer.mockReturnValue(
+      mock<Container>({
+        api,
+        eventEmitter,
+        logger: log,
+        meteoBrightnessCharacteristicsFactory,
+        meteoBrightnessObserverFactory,
+        queryAPI,
+      }),
+    );
+    queryAPI.getMeteo.mockResolvedValue(meteo);
+    meteoBrightnessCharacteristicsFactory.createCharacteristics.mockResolvedValue(
+      meteoBrightnessCharacteristics,
+    );
+    meteoBrightnessObserverFactory.createObserver.mockReturnValue(
+      meteoBrightnessObserver,
+    );
+    accessory.getService.mockReturnValue(
+      mock<PlatformService>({
+        getCharacteristic: jest.fn().mockImplementation(() => {
+          return {
+            onGet: jest.fn(),
+          };
+        }),
+      }),
+    );
+
+    const platform = new Platform(log, config, api);
+
+    await platform.configureMeteoBrightnessAccessory(accessory);
+
+    expect(
+      meteoBrightnessObserver.updateCurrentAmbientLightLevel,
+    ).toHaveBeenCalled();
+
+    expect(meteoBrightnessCharacteristics.registerListeners).toHaveBeenCalled();
+
+    expect(meteoBrightnessObserver.registerListeners).toHaveBeenCalled();
+  });
   it('should update characteristics and register listeners when configuring meteo temperature accessory', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const eventEmitter = mock<PlatformEventEmitter>();
@@ -301,6 +361,7 @@ describe('Platform', () => {
     expect(
       meteoTemperatureCharacteristics.registerListeners,
     ).toHaveBeenCalled();
+
     expect(meteoTemperatureObserver.registerListeners).toHaveBeenCalled();
   });
   it('should discover only new accessories', async () => {
@@ -315,6 +376,8 @@ describe('Platform', () => {
     const blind = mock<BlindAPI>();
     const meteo = mock<MeteoAPI>();
     const blindAccessoryFactory = mock<BlindAccessoryFactory>();
+    const meteoBrightnessAccessoryFactory =
+      mock<MeteoBrightnessAccessoryFactory>();
     const meteoTemperatureAccessoryFactory =
       mock<MeteoTemperatureAccessoryFactory>();
     const accessory = mock<PlatformAccessory>();
@@ -329,11 +392,15 @@ describe('Platform', () => {
         config,
         eventEmitter,
         logger: log,
+        meteoBrightnessAccessoryFactory,
         meteoTemperatureAccessoryFactory,
         queryAPI,
       }),
     );
     blindAccessoryFactory.createAccessory.mockResolvedValue(accessory);
+    meteoBrightnessAccessoryFactory.createAccessory.mockResolvedValue(
+      accessory,
+    );
     meteoTemperatureAccessoryFactory.createAccessory.mockResolvedValue(
       accessory,
     );
@@ -344,12 +411,14 @@ describe('Platform', () => {
 
     expect(queryAPI.getBlinds).toHaveBeenCalled();
     expect(blindAccessoryFactory.createAccessory).toHaveBeenCalledWith(blind);
+    expect(meteoBrightnessAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(meteoTemperatureAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(configureAccessory).toHaveBeenCalledWith(accessory);
 
-    expect(accessories.length).toEqual(2);
+    expect(accessories.length).toEqual(3);
     expect(accessories[0]).toEqual(accessory);
     expect(accessories[1]).toEqual(accessory);
+    expect(accessories[2]).toEqual(accessory);
   });
   it('should skip already discovered accessories', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
@@ -363,6 +432,8 @@ describe('Platform', () => {
     const blind = mock<BlindAPI>();
     const meteo = mock<MeteoAPI>();
     const blindAccessoryFactory = mock<BlindAccessoryFactory>();
+    const meteoBrightnessAccessoryFactory =
+      mock<MeteoBrightnessAccessoryFactory>();
     const meteoTemperatureAccessoryFactory =
       mock<MeteoTemperatureAccessoryFactory>();
     const accessory = mock<PlatformAccessory>();
@@ -377,11 +448,15 @@ describe('Platform', () => {
         config,
         eventEmitter,
         logger: log,
+        meteoBrightnessAccessoryFactory,
         meteoTemperatureAccessoryFactory,
         queryAPI,
       }),
     );
     blindAccessoryFactory.createAccessory.mockResolvedValue(accessory);
+    meteoBrightnessAccessoryFactory.createAccessory.mockResolvedValue(
+      accessory,
+    );
     meteoTemperatureAccessoryFactory.createAccessory.mockResolvedValue(
       accessory,
     );
@@ -392,6 +467,7 @@ describe('Platform', () => {
 
     expect(queryAPI.getBlinds).toHaveBeenCalled();
     expect(blindAccessoryFactory.createAccessory).toHaveBeenCalledWith(blind);
+    expect(meteoBrightnessAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(meteoTemperatureAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(configureAccessory).not.toHaveBeenCalled();
 
@@ -528,6 +604,28 @@ describe('Platform', () => {
 
     expect(configureBlindAccessory).toHaveBeenCalledWith(accessory);
   });
+  it('should configure meteo brightness accessory', async () => {
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.OTHER,
+    });
+
+    accessory.context.type = 'meteo-brightness';
+
+    const configureMeteoBrightnessAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureMeteoBrightnessAccessory',
+    );
+
+    configureMeteoBrightnessAccessory.mockResolvedValue(undefined);
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(accessory);
+
+    await new Promise(setImmediate);
+
+    expect(configureMeteoBrightnessAccessory).toHaveBeenCalledWith(accessory);
+  });
   it('should configure meteo temperature accessory', async () => {
     const accessory = mock<PlatformAccessory>({
       category: Categories.OTHER,
@@ -574,6 +672,34 @@ describe('Platform', () => {
     await new Promise(setImmediate);
 
     expect(configureBlindAccessory).toHaveBeenCalledWith(accessory);
+    expect(log.error).toHaveBeenCalledWith('__reason__');
+  });
+  it('should log errors on meteo brightness accessory configuration', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+    const configureMeteoBrightnessAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureMeteoBrightnessAccessory',
+    );
+
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.OTHER,
+    });
+
+    accessory.context.type = 'meteo-brightness';
+
+    getContainer.mockReturnValue(
+      mock<Container>({ api, eventEmitter, logger: log }),
+    );
+    configureMeteoBrightnessAccessory.mockRejectedValue('__reason__');
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(accessory);
+
+    await new Promise(setImmediate);
+
+    expect(configureMeteoBrightnessAccessory).toHaveBeenCalledWith(accessory);
     expect(log.error).toHaveBeenCalledWith('__reason__');
   });
   it('should log errors on meteo temperature accessory configuration', async () => {

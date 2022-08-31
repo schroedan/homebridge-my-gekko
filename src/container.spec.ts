@@ -7,17 +7,20 @@ import {
 import { mock, MockProxy } from 'jest-mock-extended';
 import {
   BlindAccessoryFactory,
+  MeteoBrightnessAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
 import { Client, LocalConnection, MemoryCache, QueryAPI } from './api';
 import {
   BlindCharacteristicsFactory,
+  MeteoBrightnessCharacteristicsFactory,
   MeteoTemperatureCharacteristicsFactory,
 } from './characteristics';
 import { Container } from './container';
 import { Interval } from './interval';
 import {
   BlindObserverFactory,
+  MeteoBrightnessObserverFactory,
   MeteoTemperatureObserverFactory,
 } from './observer';
 import { PlatformEventEmitter } from './platform-events';
@@ -125,6 +128,42 @@ describe('Container', () => {
     const container = new Container(config, logger, api);
 
     expect(container.heartbeat.interval).toBe(10000);
+  });
+  it('should provide meteo brightness accessory factory', () => {
+    const container = new Container(config, logger, api);
+    const meteoBrightnessAccessoryFactory =
+      container.meteoBrightnessAccessoryFactory;
+
+    expect(meteoBrightnessAccessoryFactory).toBeInstanceOf(
+      MeteoBrightnessAccessoryFactory,
+    );
+    expect(container.meteoBrightnessAccessoryFactory).toBe(
+      meteoBrightnessAccessoryFactory,
+    );
+  });
+  it('should provide meteo brightness characteristics factory', () => {
+    const container = new Container(config, logger, api);
+    const meteoBrightnessCharacteristicsFactory =
+      container.meteoBrightnessCharacteristicsFactory;
+
+    expect(meteoBrightnessCharacteristicsFactory).toBeInstanceOf(
+      MeteoBrightnessCharacteristicsFactory,
+    );
+    expect(container.meteoBrightnessCharacteristicsFactory).toBe(
+      meteoBrightnessCharacteristicsFactory,
+    );
+  });
+  it('should provide meteo brightness observer factory', () => {
+    const container = new Container(config, logger, api);
+    const meteoBrightnessObserverFactory =
+      container.meteoBrightnessObserverFactory;
+
+    expect(meteoBrightnessObserverFactory).toBeInstanceOf(
+      MeteoBrightnessObserverFactory,
+    );
+    expect(container.meteoBrightnessObserverFactory).toBe(
+      meteoBrightnessObserverFactory,
+    );
   });
   it('should provide meteo temperature accessory factory', () => {
     const container = new Container(config, logger, api);
