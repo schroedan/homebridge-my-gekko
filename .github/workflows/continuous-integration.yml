@@ -42,7 +42,7 @@ jobs:
           echo "COVERAGE=$(jq .total.lines.pct coverage/coverage-summary.json)" >> $GITHUB_ENV
 
       - name: Update coverage badge
-        uses: schneegans/dynamic-badges-action@v1.4.0
+        uses: schneegans/dynamic-badges-action@v1.5.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: 4136c781b460695ffcbf3dd43f5b82bc
