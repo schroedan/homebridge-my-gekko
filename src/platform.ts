@@ -24,16 +24,24 @@ export class Platform implements DynamicPlatformPlugin {
   constructor(logger: Logging, config: PlatformConfig, api: API) {
     this._container = new Container(config, logger, api);
 
-    try {
-      this.validateConfig();
-    } catch (error) {
-      this.container.logger.error(error.message);
+    if (this.isConfigInvalid()) {
+      this.container.logger.error(
+        'Platform config missing - please check the config file',
+      );
       return;
     }
 
     this.registerListeners();
 
     this.container.logger.info('Platform finished initializing');
+  }
+
+  isConfigInvalid(): boolean {
+    return (
+      this.container.config.host === undefined ||
+      this.container.config.username === undefined ||
+      this.container.config.password === undefined
+    );
   }
 
   registerListeners(): void {
@@ -60,16 +68,6 @@ export class Platform implements DynamicPlatformPlugin {
     this.container.eventEmitter.onShutdown(() => {
       this.container.heartbeat.clear();
     });
-  }
-
-  validateConfig(): void {
-    if (
-      this.container.config.host === undefined ||
-      this.container.config.username === undefined ||
-      this.container.config.password === undefined
-    ) {
-      throw new Error('Platform config missing - please check the config file');
-    }
   }
 
   async discoverAccessories(): Promise<PlatformAccessory[]> {
