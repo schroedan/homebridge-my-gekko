@@ -2,7 +2,7 @@
 
 [![NPM Version](https://img.shields.io/npm/v/homebridge-my-gekko.svg)](https://www.npmjs.com/package/homebridge-my-gekko)
 [![NPM Downloads](https://img.shields.io/npm/dt/homebridge-my-gekko.svg)](https://www.npmjs.com/package/homebridge-my-gekko)
-[![Continuous Integration](https://img.shields.io/github/workflow/status/schroedan/homebridge-my-gekko/Continuous%20Integration)](https://github.com/schroedan/homebridge-my-gekko/actions/workflows/continuous-integration.yml)
+[![Continuous Integration](https://img.shields.io/github/actions/workflow/status/schroedan/homebridge-my-gekko/continuous-integration.yml)](https://github.com/schroedan/homebridge-my-gekko/actions/workflows/continuous-integration.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/schroedan/4136c781b460695ffcbf3dd43f5b82bc/raw/homebridge-my-gekko-coverage.json)](https://github.com/schroedan/homebridge-my-gekko/actions/workflows/continuous-integration.yml)
 
 myGEKKO Platform Plugin for Homebridge
