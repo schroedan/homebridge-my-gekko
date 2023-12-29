@@ -7,58 +7,51 @@ describe('Meteo API', () => {
     globals: {
       meteo: {
         twilight: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
-          permission: 'READ',
-          index: 0,
-        },
-        humidity: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[0.00,100000.00](lx)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
         brightness: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[0.00,100000.00](kLx)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
         brightnessw: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[0.00,100000.00](kLx)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
         brightnesso: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[0.00,100000.00](kLx)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
         wind: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[0.00,100000.00](m/s)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
         temperature: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[-100.00,100.00](°C)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
         rain: {
-          value: 'Act.Value',
-          type: 'REAL',
-          unit: '__unit__',
+          description: '__description_',
+          format: 'float[0.00,100.00](l/h)',
+          type: 'AI',
           permission: 'READ',
           index: 0,
         },
@@ -69,9 +62,6 @@ describe('Meteo API', () => {
     globals: {
       meteo: {
         twilight: {
-          value: '0',
-        },
-        humidity: {
           value: '0',
         },
         brightness: {
@@ -120,6 +110,30 @@ describe('Meteo API', () => {
 
     await expect(meteo.getTwilight()).rejects.toThrow('Invalid status.');
   });
+  it('should get twilight with unknown unit', async () => {
+    const meteo = new MeteoAPI(api);
+
+    api.getResources.mockResolvedValue({
+      globals: {
+        meteo: {
+          ...resources.globals.meteo!,
+          twilight: {
+            description: '__description_',
+            format: '__format__',
+            type: 'AI',
+            permission: 'READ',
+            index: 0,
+          },
+        },
+      },
+    });
+    api.getStatus.mockResolvedValue(status);
+
+    await expect(meteo.getTwilight()).resolves.toEqual({
+      value: 0,
+      unit: 'n/a',
+    });
+  });
   it('should get twilight', async () => {
     const meteo = new MeteoAPI(api);
 
@@ -128,18 +142,7 @@ describe('Meteo API', () => {
 
     await expect(meteo.getTwilight()).resolves.toEqual({
       value: 0,
-      unit: '__unit__',
-    });
-  });
-  it('should get humidity', async () => {
-    const meteo = new MeteoAPI(api);
-
-    api.getResources.mockResolvedValue(resources);
-    api.getStatus.mockResolvedValue(status);
-
-    await expect(meteo.getHumidity()).resolves.toEqual({
-      value: 0,
-      unit: '__unit__',
+      unit: 'lx',
     });
   });
   it('should get brightness', async () => {
@@ -150,7 +153,7 @@ describe('Meteo API', () => {
 
     await expect(meteo.getBrightness()).resolves.toEqual({
       value: 0,
-      unit: '__unit__',
+      unit: 'kLx',
     });
   });
   it('should get wind', async () => {
@@ -161,7 +164,7 @@ describe('Meteo API', () => {
 
     await expect(meteo.getWind()).resolves.toEqual({
       value: 0,
-      unit: '__unit__',
+      unit: 'm/s',
     });
   });
   it('should get temperature', async () => {
@@ -172,7 +175,18 @@ describe('Meteo API', () => {
 
     await expect(meteo.getTemperature()).resolves.toEqual({
       value: 0,
-      unit: '__unit__',
+      unit: '°C',
+    });
+  });
+  it('should get rain', async () => {
+    const meteo = new MeteoAPI(api);
+
+    api.getResources.mockResolvedValue(resources);
+    api.getStatus.mockResolvedValue(status);
+
+    await expect(meteo.getRain()).resolves.toEqual({
+      value: 0,
+      unit: 'l/h',
     });
   });
 });

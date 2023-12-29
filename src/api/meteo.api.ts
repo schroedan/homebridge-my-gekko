@@ -1,16 +1,15 @@
 import { QueryAPI } from './query.api';
 
 export type MeteoResourceValue = {
-  value: 'Act.Value';
-  type: 'REAL';
-  unit: string;
+  description: string;
+  format: string;
+  type: 'AI';
   permission: 'READ';
   index: number;
 };
 
 export type MeteoResource = {
   twilight: MeteoResourceValue;
-  humidity: MeteoResourceValue;
   brightness: MeteoResourceValue;
   brightnessw: MeteoResourceValue;
   brightnesso: MeteoResourceValue;
@@ -25,7 +24,6 @@ export type MeteoStatusValue = {
 
 export type MeteoStatus = {
   twilight: MeteoStatusValue;
-  humidity: MeteoStatusValue;
   brightness: MeteoStatusValue;
   brightnessw: MeteoStatusValue;
   brightnesso: MeteoStatusValue;
@@ -62,23 +60,24 @@ export class MeteoAPI {
     return status.globals.meteo;
   }
 
+  protected convertFormatToUnit(format: string): string {
+    const groups = format.match(/[a-z]+\[[0-9-\.]+,[0-9-\.]+\]\((.+)\)/);
+    const unit = (groups || []).pop();
+
+    if (unit === undefined) {
+      return 'n/a';
+    }
+
+    return unit;
+  }
+
   async getTwilight(): Promise<MeteoDataValue> {
     const resource = await this.getResource();
     const status = await this.getStatus();
 
     return {
       value: Number(status.twilight.value),
-      unit: resource.twilight.unit,
-    };
-  }
-
-  async getHumidity(): Promise<MeteoDataValue> {
-    const resource = await this.getResource();
-    const status = await this.getStatus();
-
-    return {
-      value: Number(status.humidity.value),
-      unit: resource.humidity.unit,
+      unit: this.convertFormatToUnit(resource.twilight.format),
     };
   }
 
@@ -88,7 +87,7 @@ export class MeteoAPI {
 
     return {
       value: Number(status.brightness.value),
-      unit: resource.brightness.unit,
+      unit: this.convertFormatToUnit(resource.brightness.format),
     };
   }
 
@@ -98,7 +97,7 @@ export class MeteoAPI {
 
     return {
       value: Number(status.wind.value),
-      unit: resource.wind.unit,
+      unit: this.convertFormatToUnit(resource.wind.format),
     };
   }
 
@@ -108,7 +107,17 @@ export class MeteoAPI {
 
     return {
       value: Number(status.temperature.value),
-      unit: resource.temperature.unit,
+      unit: this.convertFormatToUnit(resource.temperature.format),
+    };
+  }
+
+  async getRain(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
+
+    return {
+      value: Number(status.rain.value),
+      unit: this.convertFormatToUnit(resource.rain.format),
     };
   }
 }
