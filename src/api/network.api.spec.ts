@@ -44,21 +44,21 @@ describe('Network API', () => {
 
     await expect(network.getHostname()).resolves.toEqual('mygekko');
   });
-  it('should get humidity', async () => {
+  it('should get language', async () => {
     const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
 
     await expect(network.getLanguage()).resolves.toEqual(NetworkLanguage.EN);
   });
-  it('should get brightness', async () => {
+  it('should get software version', async () => {
     const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
 
     await expect(network.getSoftwareVersion()).resolves.toEqual('123');
   });
-  it('should get wind', async () => {
+  it('should get hardware version', async () => {
     const network = new NetworkAPI(api);
 
     api.getStatus.mockResolvedValue(status);
