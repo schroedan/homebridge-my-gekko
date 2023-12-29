@@ -14,10 +14,9 @@ jobs:
 
     strategy:
       matrix:
-        node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-          - 14.x
-          - 16.x
+        node-version:
           - 18.x
+          - 20.x
 
     steps:
       - name: Checkout repository
@@ -26,19 +25,19 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          cache: yarn
+          cache: npm
           node-version: ${{ matrix.node-version }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm install --frozen-lockfile --no-audit --no-fund
 
       - name: Lint source code
-        run: yarn lint
+        run: npm run -- lint
 
       - name: Run tests
         run: |
-          yarn test --silent --ci --coverage
+          npm run -- test --silent --ci --coverage
           echo "COVERAGE=$(jq .total.lines.pct coverage/coverage-summary.json)" >> $GITHUB_ENV
 
       - name: Update coverage badge
@@ -60,7 +59,7 @@ jobs:
 
     env:
       NODE_VERSION: 18.x
-      YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -69,12 +68,12 @@ jobs:
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          cache: yarn
+          cache: npm
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: npm install --frozen-lockfile --no-audit --no-fund
 
       - name: Publish package
-        run: yarn npm publish
+        run: npm publish
