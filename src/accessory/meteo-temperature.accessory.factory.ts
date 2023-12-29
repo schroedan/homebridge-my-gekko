@@ -10,7 +10,10 @@ let Accessory: typeof PlatformAccessory;
 let Service: typeof PlatformService;
 
 export class MeteoTemperatureAccessoryFactory {
-  constructor(readonly api: API, readonly uuid: UUID) {
+  constructor(
+    readonly api: API,
+    readonly uuid: UUID,
+  ) {
     Accessory = api.platformAccessory;
     Service = api.hap.Service;
   }

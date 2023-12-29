@@ -5,7 +5,10 @@ import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteris
 let Service: typeof PlatformService;
 
 export class MeteoTemperatureCharacteristicsFactory {
-  constructor(readonly api: API, readonly queryAPI: QueryAPI) {
+  constructor(
+    readonly api: API,
+    readonly queryAPI: QueryAPI,
+  ) {
     Service = api.hap.Service;
   }
 

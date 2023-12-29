@@ -42,7 +42,10 @@ export enum BlindSumState {
 }
 
 export class BlindAPI {
-  constructor(readonly api: QueryAPI, readonly key: string) {}
+  constructor(
+    readonly api: QueryAPI,
+    readonly key: string,
+  ) {}
 
   protected async getResource(): Promise<BlindResource> {
     const resources = await this.api.getResources();

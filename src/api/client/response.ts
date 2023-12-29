@@ -3,7 +3,10 @@ import { Request } from './request';
 export class Response {
   private _json = undefined;
 
-  constructor(readonly request: Request, readonly data: string) {}
+  constructor(
+    readonly request: Request,
+    readonly data: string,
+  ) {}
 
   json<T>(): T | undefined {
     if (this._json === undefined) {
