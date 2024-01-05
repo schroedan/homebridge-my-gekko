@@ -4,6 +4,7 @@ import {
   PlatformAccessory,
   Service as PlatformService,
 } from 'homebridge';
+
 import { BlindAPI } from '../api';
 import { UUID } from '../uuid';
 

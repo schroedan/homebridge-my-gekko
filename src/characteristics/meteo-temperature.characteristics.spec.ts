@@ -3,7 +3,8 @@ import {
   Characteristic as ServcieCharacteristic,
   Service,
 } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { MeteoAPI } from '../api';
 import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteristics';
 

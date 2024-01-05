@@ -1,4 +1,5 @@
 import { Logging } from 'homebridge';
+
 import { MeteoTemperatureCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
 import { MeteoTemperatureObserver } from './meteo-temperature.observer';

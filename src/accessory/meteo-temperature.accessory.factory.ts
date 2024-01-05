@@ -4,6 +4,7 @@ import {
   PlatformAccessory,
   Service as PlatformService,
 } from 'homebridge';
+
 import { UUID } from '../uuid';
 
 let Accessory: typeof PlatformAccessory;

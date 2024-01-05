@@ -1,5 +1,6 @@
 import { Logging, PlatformConfig } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { BlindCharacteristics } from '../characteristics';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';

@@ -1,11 +1,12 @@
 import {
   API,
-  Characteristic as ServcieCharacteristic,
   Logging,
   PlatformConfig,
+  Characteristic as ServcieCharacteristic,
   Service,
 } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { BlindAPI, BlindState, BlindSumState } from '../api';
 import { Delay } from '../delay';
 import { PlatformEventEmitter } from '../platform-events';

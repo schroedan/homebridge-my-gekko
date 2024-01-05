@@ -1,5 +1,6 @@
 import { Logging, PlatformConfig } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { BlindCharacteristics } from '../characteristics';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';
@@ -207,7 +208,7 @@ describe('Blind Observer', () => {
     await observer.updateCurrentPosition();
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'Updating current position of blind __name__: 50% open',
+      'Updating current position of blind __name__: 50%',
     );
     expect(characteristics.updateCurrentPosition).toHaveBeenCalledWith(50);
   });
@@ -263,7 +264,7 @@ describe('Blind Observer', () => {
     await observer.updateTargetPosition();
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'Updating target position of blind __name__: 50% open',
+      'Updating target position of blind __name__: 50%',
     );
     expect(characteristics.updateTargetPosition).toHaveBeenCalledWith(50);
   });

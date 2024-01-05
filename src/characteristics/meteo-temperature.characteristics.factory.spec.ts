@@ -4,7 +4,8 @@ import {
   PlatformAccessory,
   Service as PlatformService,
 } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { MeteoAPI, QueryAPI } from '../api';
 import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteristics';
 import { MeteoTemperatureCharacteristicsFactory } from './meteo-temperature.characteristics.factory';

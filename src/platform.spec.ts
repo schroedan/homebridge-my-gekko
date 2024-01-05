@@ -7,7 +7,8 @@ import {
   PlatformConfig,
   Service as PlatformService,
 } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import {
   BlindAccessoryFactory,
   MeteoBrightnessAccessoryFactory,

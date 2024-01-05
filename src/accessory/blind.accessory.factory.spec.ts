@@ -1,5 +1,6 @@
 import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { BlindAPI } from '../api';
 import { UUID } from '../uuid';
 import { BlindAccessoryFactory } from './blind.accessory.factory';

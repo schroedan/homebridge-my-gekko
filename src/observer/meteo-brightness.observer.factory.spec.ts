@@ -1,5 +1,6 @@
 import { Logging } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
+
 import { MeteoBrightnessCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
 import { MeteoBrightnessObserver } from './meteo-brightness.observer';

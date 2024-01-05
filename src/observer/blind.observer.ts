@@ -1,4 +1,5 @@
 import { Logging, PlatformConfig } from 'homebridge';
+
 import { BlindCharacteristics } from '../characteristics';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';
@@ -61,9 +62,7 @@ export class BlindObserver {
       return;
     }
 
-    this.logger.debug(
-      `Updating current position of blind ${name}: ${value}% open`,
-    );
+    this.logger.debug(`Updating current position of blind ${name}: ${value}%`);
 
     this.characteristics.updateCurrentPosition(value);
   }
@@ -79,9 +78,7 @@ export class BlindObserver {
       return;
     }
 
-    this.logger.debug(
-      `Updating target position of blind ${name}: ${value}% open`,
-    );
+    this.logger.debug(`Updating target position of blind ${name}: ${value}%`);
 
     this.characteristics.updateTargetPosition(value);
   }

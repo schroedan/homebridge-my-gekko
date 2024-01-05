@@ -1,22 +1,21 @@
 import { API, Logging, PlatformConfig } from 'homebridge';
+
 import {
   BlindAccessoryFactory,
+  MeteoBrightnessAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
-import { MeteoBrightnessAccessoryFactory } from './accessory/meteo-brightness.accessory.factory';
 import {
-  Cache,
-  Client,
-  Connection,
-  LocalConnection,
-  MemoryCache,
+  LocalQueryAPIClient,
+  PlusQueryAPIClient,
   QueryAPI,
+  QueryAPIClient,
 } from './api';
 import {
   BlindCharacteristicsFactory,
+  MeteoBrightnessCharacteristicsFactory,
   MeteoTemperatureCharacteristicsFactory,
 } from './characteristics';
-import { MeteoBrightnessCharacteristicsFactory } from './characteristics/meteo-brightness.characteristics.factory';
 import { Interval } from './interval';
 import {
   BlindObserverFactory,
@@ -30,9 +29,6 @@ export class Container {
   private _blindAccessoryFactory?: BlindAccessoryFactory;
   private _blindCharacteristicsFactory?: BlindCharacteristicsFactory;
   private _blindObserverFactory?: BlindObserverFactory;
-  private _client?: Client;
-  private _clientCache?: Cache;
-  private _clientConnection?: Connection;
   private _config: PlatformConfig;
   private _eventEmitter?: PlatformEventEmitter;
   private _heartbeat?: Interval<() => void>;
@@ -43,6 +39,7 @@ export class Container {
   private _meteoTemperatureCharacteristicsFactory?: MeteoTemperatureCharacteristicsFactory;
   private _meteoTemperatureObserverFactory?: MeteoTemperatureObserverFactory;
   private _queryAPI?: QueryAPI;
+  private _queryAPIClient?: QueryAPIClient;
   private _uuid?: UUID;
 
   constructor(
@@ -100,39 +97,6 @@ export class Container {
     }
 
     return this._blindObserverFactory;
-  }
-
-  get client(): Client {
-    if (this._client === undefined) {
-      this._client = new Client(this.clientConnection);
-      this._client.useCache(this.clientCache);
-    }
-
-    return this._client;
-  }
-
-  get clientCache(): Cache {
-    if (this._clientCache === undefined) {
-      // ToDo: support different cache backends
-      this._clientCache = new MemoryCache({
-        ttl: this.config.ttl,
-      });
-    }
-
-    return this._clientCache;
-  }
-
-  get clientConnection(): Connection {
-    if (this._clientConnection === undefined) {
-      // ToDo: make connection configurable
-      this._clientConnection = new LocalConnection({
-        host: this.config.host,
-        username: this.config.username,
-        password: this.config.password,
-      });
-    }
-
-    return this._clientConnection;
   }
 
   get config(): PlatformConfig {
@@ -213,10 +177,30 @@ export class Container {
 
   get queryAPI(): QueryAPI {
     if (this._queryAPI === undefined) {
-      this._queryAPI = new QueryAPI(this.client);
+      this._queryAPI = new QueryAPI(this.queryAPIClient);
     }
 
     return this._queryAPI;
+  }
+
+  get queryAPIClient(): QueryAPIClient {
+    if (this._queryAPIClient === undefined) {
+      if (this.config.plus) {
+        this._queryAPIClient = new PlusQueryAPIClient({
+          username: this.config.username,
+          key: this.config.key,
+          gekkoid: this.config.gekkoid,
+        });
+      } else {
+        this._queryAPIClient = new LocalQueryAPIClient({
+          host: this.config.host,
+          username: this.config.username,
+          password: this.config.password,
+        });
+      }
+    }
+
+    return this._queryAPIClient;
   }
 
   get uuid(): UUID {

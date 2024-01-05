@@ -7,6 +7,7 @@ import {
   PlatformAccessory,
   PlatformConfig,
 } from 'homebridge';
+
 import { Container } from './container';
 
 export const PLUGIN_IDENTIFIER = 'homebridge-my-gekko';

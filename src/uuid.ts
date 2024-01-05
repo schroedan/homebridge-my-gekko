@@ -1,4 +1,5 @@
 import { API } from 'homebridge';
+
 import { PLUGIN_IDENTIFIER } from './platform';
 
 export class UUID {

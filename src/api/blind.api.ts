@@ -70,13 +70,14 @@ export class BlindAPI {
     return status.blinds[this.key];
   }
 
-  protected async setStatus(value: string): Promise<void> {
-    const request = this.api.client
-      .writeRequest()
-      .withPath(`/var/blinds/${this.key}/scmd/set`)
-      .withParams([{ name: 'value', value }]);
+  protected extractValue(value: string, index: 0 | 1 | 2 | 3 | 4): string {
+    const list = value.split(';');
 
-    await this.api.client.query(request);
+    return list[index];
+  }
+
+  protected async setStatus(value: string): Promise<void> {
+    await this.api.setBlindStatus(this.key, value);
   }
 
   async getName(): Promise<string> {
@@ -94,7 +95,7 @@ export class BlindAPI {
   async getState(): Promise<BlindState> {
     const status = await this.getStatus();
 
-    return status.sumstate.value.split(';')[0] as BlindState;
+    return this.extractValue(status.sumstate.value, 0) as BlindState;
   }
 
   async setState(state: BlindState): Promise<void> {
@@ -128,7 +129,7 @@ export class BlindAPI {
   async getPosition(): Promise<number> {
     const status = await this.getStatus();
 
-    return Number(status.sumstate.value.split(';')[1]);
+    return parseFloat(this.extractValue(status.sumstate.value, 1));
   }
 
   async setPosition(position: number): Promise<void> {
@@ -138,7 +139,7 @@ export class BlindAPI {
   async getAngle(): Promise<number> {
     const status = await this.getStatus();
 
-    return Number(status.sumstate.value.split(';')[2]);
+    return parseInt(this.extractValue(status.sumstate.value, 2));
   }
 
   async setAngle(angle: number): Promise<void> {
@@ -148,12 +149,12 @@ export class BlindAPI {
   async getSumState(): Promise<BlindSumState> {
     const status = await this.getStatus();
 
-    return status.sumstate.value.split(';')[3] as BlindSumState;
+    return this.extractValue(status.sumstate.value, 3) as BlindSumState;
   }
 
   async getSlatRotationArea(): Promise<number> {
     const status = await this.getStatus();
 
-    return Number(status.sumstate.value.split(';')[4]);
+    return parseInt(this.extractValue(status.sumstate.value, 4));
   }
 }

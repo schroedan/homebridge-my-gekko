@@ -1,6 +1,6 @@
 import { mock, MockProxy } from 'jest-mock-extended';
+
 import { BlindAPI, BlindState, BlindSumState } from './blind.api';
-import { Client, WriteRequest } from './client';
 import { QueryAPI, Resources, Status } from './query.api';
 
 describe('Blind API', () => {
@@ -35,11 +35,9 @@ describe('Blind API', () => {
       },
     },
   };
-  let client: MockProxy<Client>;
   let api: MockProxy<QueryAPI>;
   beforeEach(() => {
-    client = mock<Client>();
-    api = mock<QueryAPI>({ client });
+    api = mock<QueryAPI>();
   });
   it('should provide API', () => {
     const blind = new BlindAPI(api, 'item0');
@@ -83,78 +81,50 @@ describe('Blind API', () => {
   });
   it('should set state', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.setState(BlindState.STOP)).resolves.not.toThrow();
   });
   it('should handle hold down state', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.holdDown()).resolves.not.toThrow();
   });
   it('should handle down state', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.down()).resolves.not.toThrow();
   });
   it('should handle stop state', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.stop()).resolves.not.toThrow();
   });
   it('should handle up state', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.up()).resolves.not.toThrow();
   });
   it('should handle hold up state', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.holdUp()).resolves.not.toThrow();
   });
   it('should handle toggle status', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.toggle()).resolves.not.toThrow();
   });
@@ -167,12 +137,8 @@ describe('Blind API', () => {
   });
   it('should set position', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.setPosition(0)).resolves.not.toThrow();
   });
@@ -185,12 +151,8 @@ describe('Blind API', () => {
   });
   it('should set angle', async () => {
     const blind = new BlindAPI(api, 'item0');
-    const request = mock<WriteRequest>();
 
-    request.withPath.mockReturnValue(request);
-    request.withParams.mockReturnValue(request);
-
-    client.writeRequest.mockReturnValue(request);
+    api.setBlindStatus.mockResolvedValue();
 
     await expect(blind.setAngle(90)).resolves.not.toThrow();
   });

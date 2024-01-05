@@ -1,5 +1,6 @@
 import { API } from 'homebridge';
 import { mock } from 'jest-mock-extended';
+
 import { PLUGIN_IDENTIFIER } from './platform';
 import { UUID } from './uuid';
 

@@ -1,9 +1,10 @@
 import {
   API,
-  Characteristic as ServcieCharacteristic,
   CharacteristicValue,
+  Characteristic as ServcieCharacteristic,
   Service,
 } from 'homebridge';
+
 import { MeteoAPI } from '../api';
 
 let Characteristic: typeof ServcieCharacteristic;

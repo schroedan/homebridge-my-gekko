@@ -1,6 +1,6 @@
 import { QueryAPI } from './query.api';
 
-export type NetworkResource = unknown;
+export type NetworkResource = any;
 
 export type NetworkStatusValue = {
   value: string;

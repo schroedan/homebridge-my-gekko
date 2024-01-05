@@ -1,5 +1,6 @@
 import { Logging } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
+
 import { MeteoTemperatureCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
 import { MeteoTemperatureObserver } from './meteo-temperature.observer';
@@ -9,7 +10,11 @@ describe('Meteo Temperature Observer', () => {
   let eventEmitter: MockProxy<PlatformEventEmitter>;
   let logger: MockProxy<Logging>;
   beforeEach(() => {
-    characteristics = mock<MeteoTemperatureCharacteristics>();
+    characteristics = mock<MeteoTemperatureCharacteristics>({
+      currentTemperature: {
+        value: 20.0,
+      },
+    });
     eventEmitter = mock<PlatformEventEmitter>({
       onHeartbeat: (listener) => {
         listener();
@@ -65,6 +70,21 @@ describe('Meteo Temperature Observer', () => {
       'Updating current temperature of meteo: 20.5 °C',
     );
     expect(characteristics.updateCurrentTemperature).toHaveBeenCalledWith(20.5);
+  });
+  it('should keep current temperature in characteristics', async () => {
+    characteristics.getTemperature.mockResolvedValue(20.0);
+    characteristics.getUnit.mockResolvedValue('°C');
+
+    const observer = new MeteoTemperatureObserver(
+      characteristics,
+      eventEmitter,
+      logger,
+    );
+
+    await observer.updateCurrentTemperature();
+
+    expect(logger.debug).not.toHaveBeenCalled();
+    expect(characteristics.updateCurrentTemperature).not.toHaveBeenCalled();
   });
   it('should log error on failed update', async () => {
     jest

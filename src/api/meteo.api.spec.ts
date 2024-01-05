@@ -1,4 +1,5 @@
 import { mock, MockProxy } from 'jest-mock-extended';
+
 import { MeteoAPI } from './meteo.api';
 import { QueryAPI, Resources, Status } from './query.api';
 

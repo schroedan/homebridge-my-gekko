@@ -1,4 +1,5 @@
 import { Logging } from 'homebridge';
+
 import { MeteoBrightnessCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
 import { MeteoBrightnessObserver } from './meteo-brightness.observer';

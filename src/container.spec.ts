@@ -4,13 +4,14 @@ import {
   PlatformConfig,
   Service as PlatformService,
 } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import {
   BlindAccessoryFactory,
   MeteoBrightnessAccessoryFactory,
   MeteoTemperatureAccessoryFactory,
 } from './accessory';
-import { Client, LocalConnection, MemoryCache, QueryAPI } from './api';
+import { LocalQueryAPIClient, PlusQueryAPIClient, QueryAPI } from './api';
 import {
   BlindCharacteristicsFactory,
   MeteoBrightnessCharacteristicsFactory,
@@ -31,11 +32,7 @@ describe('Container', () => {
   let logger: MockProxy<Logging>;
   let api: MockProxy<API>;
   beforeEach(() => {
-    config = mock<PlatformConfig>({
-      host: '__host__',
-      username: '__userbane__',
-      password: '__password__',
-    });
+    config = mock<PlatformConfig>();
     logger = mock<Logging>();
     api = mock<API>({
       hap: {
@@ -73,29 +70,6 @@ describe('Container', () => {
 
     expect(blindObserverFactory).toBeInstanceOf(BlindObserverFactory);
     expect(container.blindObserverFactory).toBe(blindObserverFactory);
-  });
-  it('should provide client', () => {
-    const container = new Container(config, logger, api);
-    const client = container.client;
-
-    expect(client).toBeInstanceOf(Client);
-    expect(container.client).toBe(client);
-  });
-  it('should provide memory cache with custom TTL as client cache', () => {
-    config.ttl = 10;
-
-    const container = new Container(config, logger, api);
-    const clientCache = container.clientCache;
-
-    expect(clientCache).toBeInstanceOf(MemoryCache);
-    expect(container.clientCache).toBe(clientCache);
-  });
-  it('should provide local connection as client connection', () => {
-    const container = new Container(config, logger, api);
-    const clientConnection = container.clientConnection;
-
-    expect(clientConnection).toBeInstanceOf(LocalConnection);
-    expect(container.clientConnection).toBe(clientConnection);
   });
   it('should provide platform config with defaults', () => {
     const container = new Container(config, logger, api);
@@ -207,6 +181,20 @@ describe('Container', () => {
 
     expect(queryAPI).toBeInstanceOf(QueryAPI);
     expect(container.queryAPI).toBe(queryAPI);
+  });
+  it('should provide local query API client', () => {
+    const container = new Container(config, logger, api);
+    const queryAPIClient = container.queryAPIClient;
+
+    expect(queryAPIClient).toBeInstanceOf(LocalQueryAPIClient);
+    expect(container.queryAPIClient).toBe(queryAPIClient);
+  });
+  it('should provide plus query API client', () => {
+    const container = new Container({ ...config, plus: true }, logger, api);
+    const queryAPIClient = container.queryAPIClient;
+
+    expect(queryAPIClient).toBeInstanceOf(PlusQueryAPIClient);
+    expect(container.queryAPIClient).toBe(queryAPIClient);
   });
   it('should provide UUID', () => {
     const container = new Container(config, logger, api);

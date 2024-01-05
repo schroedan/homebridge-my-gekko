@@ -1,5 +1,6 @@
 import { Logging } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
+
 import { MeteoBrightnessCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
 import { MeteoBrightnessObserver } from './meteo-brightness.observer';
@@ -9,7 +10,11 @@ describe('Meteo Brightness Observer', () => {
   let eventEmitter: MockProxy<PlatformEventEmitter>;
   let logger: MockProxy<Logging>;
   beforeEach(() => {
-    characteristics = mock<MeteoBrightnessCharacteristics>();
+    characteristics = mock<MeteoBrightnessCharacteristics>({
+      currentAmbientLightLevel: {
+        value: 1000.0,
+      },
+    });
     eventEmitter = mock<PlatformEventEmitter>({
       onHeartbeat: (listener) => {
         listener();
@@ -67,6 +72,23 @@ describe('Meteo Brightness Observer', () => {
     expect(characteristics.updateCurrentAmbientLightLevel).toHaveBeenCalledWith(
       1000.5,
     );
+  });
+  it('should keep current ambient light level in characteristics', async () => {
+    characteristics.getCurrentAmbientLightLevel.mockResolvedValue(1000.0);
+    characteristics.getUnit.mockResolvedValue('Lux');
+
+    const observer = new MeteoBrightnessObserver(
+      characteristics,
+      eventEmitter,
+      logger,
+    );
+
+    await observer.updateCurrentAmbientLightLevel();
+
+    expect(logger.debug).not.toHaveBeenCalled();
+    expect(
+      characteristics.updateCurrentAmbientLightLevel,
+    ).not.toHaveBeenCalled();
   });
   it('should log error on failed update', async () => {
     jest

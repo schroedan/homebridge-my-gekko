@@ -1,5 +1,5 @@
 import { BlindAPI, BlindResource, BlindStatus } from './blind.api';
-import { Client } from './client';
+import { QueryAPIClient } from './client';
 import { MeteoAPI, MeteoResource, MeteoStatus } from './meteo.api';
 import { NetworkAPI, NetworkResource, NetworkStatus } from './network.api';
 
@@ -20,30 +20,16 @@ export type Status = {
 };
 
 export class QueryAPI {
-  constructor(readonly client: Client) {}
+  constructor(public readonly client: QueryAPIClient) {}
 
   async getResources(): Promise<Resources> {
-    const request = this.client.readRequest().withPath('/var');
-    const response = await this.client.query(request);
-    const resources = response.json<Resources>();
+    const response = await this.client.instance.get('/var');
 
-    if (resources === undefined) {
+    if (response.data === undefined) {
       throw new Error('Invalid resources response.');
     }
 
-    return resources;
-  }
-
-  async getStatus(): Promise<Status> {
-    const request = this.client.readRequest().withPath('/var/status');
-    const response = await this.client.query(request);
-    const status = response.json<Status>();
-
-    if (status === undefined) {
-      throw new Error('Invalid status response.');
-    }
-
-    return status;
+    return response.data;
   }
 
   async getBlinds(): Promise<BlindAPI[]> {
@@ -54,7 +40,7 @@ export class QueryAPI {
     }
 
     return Object.keys(resources.blinds)
-      .filter((key) => key.substr(0, 4) === 'item')
+      .filter((key) => key.substring(0, 4) === 'item')
       .map((key) => new BlindAPI(this, key));
   }
 
@@ -86,5 +72,22 @@ export class QueryAPI {
     }
 
     return new NetworkAPI(this);
+  }
+
+  async getStatus(): Promise<Status> {
+    const response = await this.client.instance.get('/var/status');
+
+    if (response.data === undefined) {
+      throw new Error('Invalid status response.');
+    }
+
+    return response.data;
+  }
+
+  async setBlindStatus(key: string, value: string): Promise<void> {
+    await this.client.instance.get(`/var/blinds/${key}/scmd/set`, {
+      cache: false,
+      params: { value },
+    });
   }
 }

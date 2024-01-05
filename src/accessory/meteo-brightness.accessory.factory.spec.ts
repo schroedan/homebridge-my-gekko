@@ -1,5 +1,6 @@
 import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { UUID } from '../uuid';
 import { MeteoBrightnessAccessoryFactory } from './meteo-brightness.accessory.factory';
 

@@ -1,9 +1,10 @@
 import {
   API,
-  Characteristic as ServcieCharacteristic,
   CharacteristicValue,
+  Characteristic as ServcieCharacteristic,
   Service,
 } from 'homebridge';
+
 import { MeteoAPI } from '../api';
 
 let Characteristic: typeof ServcieCharacteristic;
@@ -24,9 +25,9 @@ export class MeteoBrightnessCharacteristics {
   }
 
   registerListeners(): void {
-    this.currentAmbientLightLevel
-      .setProps({ minValue: 0.0, maxValue: Math.pow(2, 16) - 1.0 })
-      .onGet(() => this.getCurrentAmbientLightLevel());
+    this.currentAmbientLightLevel.onGet(() =>
+      this.getCurrentAmbientLightLevel(),
+    );
   }
 
   updateCurrentAmbientLightLevel(value: CharacteristicValue): this {
@@ -39,9 +40,13 @@ export class MeteoBrightnessCharacteristics {
 
   async getCurrentAmbientLightLevel(): Promise<CharacteristicValue> {
     const data = await this.meteo.getSouthBrightness();
-    return data.unit === 'kLx'
-      ? Math.max(0.0001, data.value * 1000)
-      : data.value;
+    return Math.min(
+      Math.max(
+        this.currentAmbientLightLevel.props.minValue || 0.0001,
+        data.unit === 'kLx' ? data.value * 1000 : data.value,
+      ),
+      this.currentAmbientLightLevel.props.maxValue || 100000,
+    );
   }
 
   async getUnit(): Promise<CharacteristicValue> {

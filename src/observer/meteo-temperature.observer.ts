@@ -1,4 +1,5 @@
 import { Logging } from 'homebridge';
+
 import { MeteoTemperatureCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
 
@@ -21,7 +22,11 @@ export class MeteoTemperatureObserver {
     const value = await this.characteristics.getTemperature();
     const unit = await this.characteristics.getUnit();
 
-    if (this.characteristics.currentTemperature.value === value) {
+    if (
+      Math.round(
+        Number(this.characteristics.currentTemperature.value) * 100,
+      ) === Math.round(Number(value) * 100)
+    ) {
       return;
     }
 

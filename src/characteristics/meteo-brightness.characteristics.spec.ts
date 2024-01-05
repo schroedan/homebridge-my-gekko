@@ -3,7 +3,8 @@ import {
   Characteristic as ServcieCharacteristic,
   Service,
 } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
+
 import { MeteoAPI } from '../api';
 import { MeteoBrightnessCharacteristics } from './meteo-brightness.characteristics';
 
@@ -69,7 +70,6 @@ describe('Meteo Brightness Characteristics', () => {
 
     characteristics.registerListeners();
 
-    expect(currentAmbientLightLevel.setProps).toHaveBeenCalled();
     expect(currentAmbientLightLevel.onGet).toHaveBeenCalled();
   });
   it('should return south brightness on get current ambient light level', () => {

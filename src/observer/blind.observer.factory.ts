@@ -1,4 +1,5 @@
 import { Logging, PlatformConfig } from 'homebridge';
+
 import { BlindCharacteristics } from '../characteristics';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';

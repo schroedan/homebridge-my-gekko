@@ -1,5 +1,6 @@
 import { API } from 'homebridge';
 import { mock, MockProxy } from 'jest-mock-extended';
+
 import main from './main';
 import { Platform, PLATFORM_NAME, PLUGIN_IDENTIFIER } from './platform';
 

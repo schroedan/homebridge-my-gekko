@@ -1,11 +1,12 @@
 import {
   API,
-  Characteristic as ServcieCharacteristic,
   CharacteristicValue,
   Logging,
   PlatformConfig,
+  Characteristic as ServcieCharacteristic,
   Service,
 } from 'homebridge';
+
 import { BlindAPI, BlindState, BlindSumState } from '../api';
 import { Delay } from '../delay';
 import { PlatformEventEmitter } from '../platform-events';

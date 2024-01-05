@@ -13,11 +13,20 @@
         "default": "myGEKKO",
         "required": true
       },
+      "plus": {
+        "title": "QueryAPI plus",
+        "type": "boolean",
+        "required": true,
+        "description": "Use myGEKKO plus service"
+      },
       "host": {
         "title": "QueryAPI host",
         "type": "string",
         "required": true,
-        "description": "The host of your myGEKKO"
+        "description": "The host of your myGEKKO",
+        "condition": {
+          "functionBody": "return !model.plus;"
+        }
       },
       "username": {
         "title": "QueryAPI username",
@@ -29,7 +38,28 @@
         "title": "QueryAPI password",
         "type": "string",
         "required": true,
-        "description": "The password of your QueryAPI user"
+        "description": "The password of your QueryAPI user",
+        "condition": {
+          "functionBody": "return !model.plus;"
+        }
+      },
+      "key": {
+        "title": "QueryAPI key",
+        "type": "string",
+        "required": true,
+        "description": "The key of your QueryAPI user",
+        "condition": {
+          "functionBody": "return !!model.plus;"
+        }
+      },
+      "gekkoid": {
+        "title": "QueryAPI gekkoid",
+        "type": "string",
+        "required": true,
+        "description": "The ID of your myGEKKO",
+        "condition": {
+          "functionBody": "return !!model.plus;"
+        }
       },
       "blinds": {
         "title": "Discover blind accessories",

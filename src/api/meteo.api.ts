@@ -76,7 +76,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.twilight.value),
+      value: parseFloat(status.twilight.value),
       unit: this.convertFormatToUnit(resource.twilight.format),
     };
   }
@@ -86,7 +86,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.brightness.value),
+      value: parseFloat(status.brightness.value),
       unit: this.convertFormatToUnit(resource.brightness.format),
     };
   }
@@ -96,7 +96,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.brightnessw.value),
+      value: parseFloat(status.brightnessw.value),
       unit: this.convertFormatToUnit(resource.brightnessw.format),
     };
   }
@@ -106,7 +106,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.brightnesso.value),
+      value: parseFloat(status.brightnesso.value),
       unit: this.convertFormatToUnit(resource.brightnesso.format),
     };
   }
@@ -116,7 +116,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.wind.value),
+      value: parseFloat(status.wind.value),
       unit: this.convertFormatToUnit(resource.wind.format),
     };
   }
@@ -126,7 +126,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.temperature.value),
+      value: parseFloat(status.temperature.value),
       unit: this.convertFormatToUnit(resource.temperature.format),
     };
   }
@@ -136,7 +136,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: Number(status.rain.value),
+      value: parseFloat(status.rain.value),
       unit: this.convertFormatToUnit(resource.rain.format),
     };
   }

@@ -5,6 +5,7 @@ import {
   PlatformConfig,
   Service as PlatformService,
 } from 'homebridge';
+
 import { QueryAPI } from '../api';
 import { PlatformEventEmitter } from '../platform-events';
 import { BlindCharacteristics } from './blind.characteristics';

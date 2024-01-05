@@ -1,4 +1,5 @@
 import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
+
 import { QueryAPI } from '../api';
 import { MeteoBrightnessCharacteristics } from './meteo-brightness.characteristics';
 
