@@ -5,6 +5,7 @@ export type PlusQueryAPIConfig = Partial<{
   key: string;
   gekkoid: string;
   ttl: number;
+  retries: number;
 }>;
 
 export class PlusQueryAPIClient implements QueryAPIClient {
@@ -20,7 +21,7 @@ export class PlusQueryAPIClient implements QueryAPIClient {
     baseURL: this.baseURL,
     params: this.auth,
     ttl: 1000 * (this.config.ttl || 3),
-    retries: 3,
+    retries: this.config.retries || 3,
   });
 
   constructor(public readonly config: PlusQueryAPIConfig) {}

@@ -5,6 +5,7 @@ export type LocalQueryAPIConfig = Partial<{
   username: string;
   password: string;
   ttl: number;
+  retries: number;
 }>;
 
 export class LocalQueryAPIClient implements QueryAPIClient {
@@ -19,7 +20,7 @@ export class LocalQueryAPIClient implements QueryAPIClient {
     auth: this.auth,
     baseURL: this.baseURL,
     ttl: 1000 * (this.config.ttl || 3),
-    retries: 3,
+    retries: this.config.retries || 3,
   });
 
   constructor(public readonly config: LocalQueryAPIConfig) {}

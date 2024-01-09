@@ -78,6 +78,14 @@
         "type": "number",
         "placeholder": 1
       },
+      "retries": {
+        "title": "Client retries",
+        "description": "The number of retries for failed reqests to myGEKKO.  Default: 3.",
+        "type": "integer",
+        "default": 3,
+        "minimum": 0,
+        "maximum": 10
+      },
       "interval": {
         "title": "Update interval in seconds",
         "type": "number",
