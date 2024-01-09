@@ -14,6 +14,7 @@ describe('Meteo Brightness Observer', () => {
       currentAmbientLightLevel: {
         value: 1000.0,
       },
+      direction: 'south',
     });
     eventEmitter = mock<PlatformEventEmitter>({
       onHeartbeat: (listener) => {
@@ -67,7 +68,7 @@ describe('Meteo Brightness Observer', () => {
     await observer.updateCurrentAmbientLightLevel();
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'Updating current ambient light level of meteo: 1000.5 Lux',
+      'Updating current ambient light level from south of meteo: 1000.5 Lux',
     );
     expect(characteristics.updateCurrentAmbientLightLevel).toHaveBeenCalledWith(
       1000.5,

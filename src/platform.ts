@@ -16,15 +16,17 @@ export const PLATFORM_NAME = 'mygekko';
 
 export class Platform implements DynamicPlatformPlugin {
   private _accessories: PlatformAccessory[] = [];
-  private _container: Container;
+  private _container = new Container(this.config, this.logger, this.api);
 
   get container(): Container {
     return this._container;
   }
 
-  constructor(logger: Logging, config: PlatformConfig, api: API) {
-    this._container = new Container(config, logger, api);
-
+  constructor(
+    readonly logger: Logging,
+    readonly config: PlatformConfig,
+    readonly api: API,
+  ) {
     if (this.isConfigInvalid()) {
       this.container.logger.error(
         'Platform config missing - please check the config file',
@@ -110,6 +112,14 @@ export class Platform implements DynamicPlatformPlugin {
       this.container.meteoBrightnessAccessoryFactory.createAccessory(
         'Meteo Brightness South',
         'brightness',
+      ),
+      this.container.meteoBrightnessAccessoryFactory.createAccessory(
+        'Meteo Brightness East',
+        'brightnesso',
+      ),
+      this.container.meteoBrightnessAccessoryFactory.createAccessory(
+        'Meteo Brightness West',
+        'brightnessw',
       ),
       this.container.meteoTemperatureAccessoryFactory.createAccessory(
         'Meteo Temperature',

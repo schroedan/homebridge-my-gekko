@@ -27,7 +27,7 @@ export class MeteoBrightnessObserver {
     }
 
     this.logger.debug(
-      `Updating current ambient light level of meteo: ${value} ${unit}`,
+      `Updating current ambient light level from ${this.characteristics.direction} of meteo: ${value} ${unit}`,
     );
 
     this.characteristics.updateCurrentAmbientLightLevel(value);

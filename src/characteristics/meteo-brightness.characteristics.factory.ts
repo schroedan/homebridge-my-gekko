@@ -27,6 +27,28 @@ export class MeteoBrightnessCharacteristicsFactory {
       throw new Error('Meteo not found.');
     }
 
-    return new MeteoBrightnessCharacteristics(this.api, service, meteo);
+    switch (accessory.context.key) {
+      case 'brightnesso':
+        return new MeteoBrightnessCharacteristics(
+          this.api,
+          service,
+          meteo,
+          'east',
+        );
+      case 'brightnessw':
+        return new MeteoBrightnessCharacteristics(
+          this.api,
+          service,
+          meteo,
+          'west',
+        );
+      default:
+        return new MeteoBrightnessCharacteristics(
+          this.api,
+          service,
+          meteo,
+          'south',
+        );
+    }
   }
 }

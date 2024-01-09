@@ -81,7 +81,7 @@ export class MeteoAPI {
     };
   }
 
-  async getSouthBrightness(): Promise<MeteoDataValue> {
+  async getBrightness(): Promise<MeteoDataValue> {
     const resource = await this.getResource();
     const status = await this.getStatus();
 
@@ -91,23 +91,23 @@ export class MeteoAPI {
     };
   }
 
-  async getWestBrightness(): Promise<MeteoDataValue> {
-    const resource = await this.getResource();
-    const status = await this.getStatus();
-
-    return {
-      value: parseFloat(status.brightnessw.value),
-      unit: this.convertFormatToUnit(resource.brightnessw.format),
-    };
-  }
-
-  async getEastBrightness(): Promise<MeteoDataValue> {
+  async getBrightnessEast(): Promise<MeteoDataValue> {
     const resource = await this.getResource();
     const status = await this.getStatus();
 
     return {
       value: parseFloat(status.brightnesso.value),
       unit: this.convertFormatToUnit(resource.brightnesso.format),
+    };
+  }
+
+  async getBrightnessWest(): Promise<MeteoDataValue> {
+    const resource = await this.getResource();
+    const status = await this.getStatus();
+
+    return {
+      value: parseFloat(status.brightnessw.value),
+      unit: this.convertFormatToUnit(resource.brightnessw.format),
     };
   }
 

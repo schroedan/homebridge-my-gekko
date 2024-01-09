@@ -51,7 +51,7 @@ describe('Meteo Brightness Characteristics Factory', () => {
       meteoBrightness.createCharacteristics(accessory),
     ).rejects.toThrow('Meteo not found.');
   });
-  it('should create characteristics', async () => {
+  it('should create characteristics with default direction', async () => {
     const accessory = mock<PlatformAccessory>({
       category: Categories.OTHER,
     });
@@ -64,8 +64,54 @@ describe('Meteo Brightness Characteristics Factory', () => {
       queryAPI,
     );
 
-    await expect(
-      meteoBrightness.createCharacteristics(accessory),
-    ).resolves.toBeInstanceOf(MeteoBrightnessCharacteristics);
+    const characteristics =
+      await meteoBrightness.createCharacteristics(accessory);
+
+    expect(characteristics).toBeInstanceOf(MeteoBrightnessCharacteristics);
+    expect(characteristics.direction).toBe('south');
+  });
+  it('should create characteristics with east direction', async () => {
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.OTHER,
+      context: {
+        key: 'brightnesso',
+      },
+    });
+
+    accessory.getService.mockReturnValue(mock<PlatformService>());
+    queryAPI.getMeteo.mockResolvedValue(mock<MeteoAPI>());
+
+    const meteoBrightness = new MeteoBrightnessCharacteristicsFactory(
+      api,
+      queryAPI,
+    );
+
+    const characteristics =
+      await meteoBrightness.createCharacteristics(accessory);
+
+    expect(characteristics).toBeInstanceOf(MeteoBrightnessCharacteristics);
+    expect(characteristics.direction).toBe('east');
+  });
+  it('should create characteristics with default direction', async () => {
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.OTHER,
+      context: {
+        key: 'brightnessw',
+      },
+    });
+
+    accessory.getService.mockReturnValue(mock<PlatformService>());
+    queryAPI.getMeteo.mockResolvedValue(mock<MeteoAPI>());
+
+    const meteoBrightness = new MeteoBrightnessCharacteristicsFactory(
+      api,
+      queryAPI,
+    );
+
+    const characteristics =
+      await meteoBrightness.createCharacteristics(accessory);
+
+    expect(characteristics).toBeInstanceOf(MeteoBrightnessCharacteristics);
+    expect(characteristics.direction).toBe('west');
   });
 });

@@ -146,35 +146,35 @@ describe('Meteo API', () => {
       unit: 'lx',
     });
   });
-  it('should get south brightness', async () => {
+  it('should get brightness', async () => {
     const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
 
-    await expect(meteo.getSouthBrightness()).resolves.toEqual({
+    await expect(meteo.getBrightness()).resolves.toEqual({
       value: 0,
       unit: 'kLx',
     });
   });
-  it('should get west brightness', async () => {
+  it('should get brightness east', async () => {
     const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
 
-    await expect(meteo.getWestBrightness()).resolves.toEqual({
+    await expect(meteo.getBrightnessEast()).resolves.toEqual({
       value: 0,
       unit: 'kLx',
     });
   });
-  it('should get east brightness', async () => {
+  it('should get brightness west', async () => {
     const meteo = new MeteoAPI(api);
 
     api.getResources.mockResolvedValue(resources);
     api.getStatus.mockResolvedValue(status);
 
-    await expect(meteo.getEastBrightness()).resolves.toEqual({
+    await expect(meteo.getBrightnessWest()).resolves.toEqual({
       value: 0,
       unit: 'kLx',
     });

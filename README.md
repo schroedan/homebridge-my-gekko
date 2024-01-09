@@ -10,7 +10,7 @@ myGEKKO Platform Plugin for Homebridge
 This plugin exposes:
 
 - Blinds as window coverings
-- Meteo brightness as light sensor
+- Meteo brightnesses as light sensors
 - Meteo temperature as temperature sensor
 
 ## Installation

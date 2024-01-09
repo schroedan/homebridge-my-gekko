@@ -26,6 +26,7 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
     expect(characteristics.api).toBe(api);
@@ -38,6 +39,7 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
     service.getCharacteristic.mockReturnValue(currentAmbientLightLevel);
@@ -66,6 +68,7 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
     characteristics.registerListeners();
@@ -97,9 +100,10 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
-    meteo.getSouthBrightness.mockResolvedValue({ value: 1000.5, unit: 'kLx' });
+    meteo.getBrightness.mockResolvedValue({ value: 1000.5, unit: 'kLx' });
 
     characteristics.registerListeners();
 
@@ -110,6 +114,7 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
     characteristics.updateCurrentAmbientLightLevel('__light__');
@@ -124,9 +129,10 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
-    meteo.getSouthBrightness.mockResolvedValue({ value: 1000.5, unit: 'Lux' });
+    meteo.getBrightness.mockResolvedValue({ value: 1000.5, unit: 'Lux' });
 
     await expect(characteristics.getCurrentAmbientLightLevel()).resolves.toBe(
       1000.5,
@@ -138,9 +144,40 @@ describe('Meteo Brightness Characteristics', () => {
       api,
       service,
       meteo,
+      'south',
     );
 
-    meteo.getSouthBrightness.mockResolvedValue({ value: 1.0005, unit: 'kLx' });
+    meteo.getBrightness.mockResolvedValue({ value: 1.0005, unit: 'kLx' });
+
+    await expect(characteristics.getCurrentAmbientLightLevel()).resolves.toBe(
+      1000.5,
+    );
+    await expect(characteristics.getUnit()).resolves.toBe('Lux');
+  });
+  it('should get current ambient light level from east', async () => {
+    const characteristics = new MeteoBrightnessCharacteristics(
+      api,
+      service,
+      meteo,
+      'east',
+    );
+
+    meteo.getBrightnessEast.mockResolvedValue({ value: 1000.5, unit: 'Lux' });
+
+    await expect(characteristics.getCurrentAmbientLightLevel()).resolves.toBe(
+      1000.5,
+    );
+    await expect(characteristics.getUnit()).resolves.toBe('Lux');
+  });
+  it('should get current ambient light level from west', async () => {
+    const characteristics = new MeteoBrightnessCharacteristics(
+      api,
+      service,
+      meteo,
+      'west',
+    );
+
+    meteo.getBrightnessWest.mockResolvedValue({ value: 1000.5, unit: 'Lux' });
 
     await expect(characteristics.getCurrentAmbientLightLevel()).resolves.toBe(
       1000.5,

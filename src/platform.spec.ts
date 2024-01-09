@@ -412,7 +412,7 @@ describe('Platform', () => {
     expect(meteoTemperatureAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(configureAccessory).toHaveBeenCalledWith(accessory);
 
-    expect(accessories.length).toEqual(3);
+    expect(accessories.length).toEqual(5);
     expect(accessories[0]).toEqual(accessory);
     expect(accessories[1]).toEqual(accessory);
     expect(accessories[2]).toEqual(accessory);

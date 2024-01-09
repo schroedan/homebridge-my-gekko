@@ -20,6 +20,7 @@ export class MeteoBrightnessCharacteristics {
     readonly api: API,
     readonly service: Service,
     readonly meteo: MeteoAPI,
+    readonly direction: 'east' | 'south' | 'west',
   ) {
     Characteristic = api.hap.Characteristic;
   }
@@ -39,7 +40,17 @@ export class MeteoBrightnessCharacteristics {
   }
 
   async getCurrentAmbientLightLevel(): Promise<CharacteristicValue> {
-    const data = await this.meteo.getSouthBrightness();
+    let data;
+    switch (this.direction) {
+      case 'east':
+        data = await this.meteo.getBrightnessEast();
+        break;
+      case 'west':
+        data = await this.meteo.getBrightnessWest();
+        break;
+      default:
+        data = await this.meteo.getBrightness();
+    }
     return Math.min(
       Math.max(
         this.currentAmbientLightLevel.props.minValue || 0.0001,
@@ -50,7 +61,17 @@ export class MeteoBrightnessCharacteristics {
   }
 
   async getUnit(): Promise<CharacteristicValue> {
-    const data = await this.meteo.getSouthBrightness();
+    let data;
+    switch (this.direction) {
+      case 'east':
+        data = await this.meteo.getBrightnessEast();
+        break;
+      case 'west':
+        data = await this.meteo.getBrightnessWest();
+        break;
+      default:
+        data = await this.meteo.getBrightness();
+    }
     return data.unit === 'kLx' ? 'Lux' : data.unit;
   }
 }
