@@ -87,8 +87,10 @@ export class Platform implements DynamicPlatformPlugin {
     const blinds = await this.container.queryAPI.getBlinds();
 
     for (const blind of blinds) {
-      const accessory =
-        await this.container.blindAccessoryFactory.createAccessory(blind);
+      const accessory = this.container.blindAccessoryFactory.createAccessory(
+        await blind.getName(),
+        blind.key,
+      );
 
       if (this.accessoryExists(accessory)) {
         continue;
@@ -105,8 +107,14 @@ export class Platform implements DynamicPlatformPlugin {
   async discoverMeteoAccessories(): Promise<PlatformAccessory[]> {
     const accessories: PlatformAccessory[] = [];
     const meteoAccessories = [
-      await this.container.meteoBrightnessAccessoryFactory.createAccessory(),
-      await this.container.meteoTemperatureAccessoryFactory.createAccessory(),
+      this.container.meteoBrightnessAccessoryFactory.createAccessory(
+        'Meteo Brightness South',
+        'brightness',
+      ),
+      this.container.meteoTemperatureAccessoryFactory.createAccessory(
+        'Meteo Temperature',
+        'temperature',
+      ),
     ];
 
     for (const meteoAccessory of meteoAccessories) {

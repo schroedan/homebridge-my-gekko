@@ -20,10 +20,11 @@ describe('Meteo Brightness Accessory Factory', () => {
     });
     uuid = mock<UUID>();
   });
-  it('should create accessory', async () => {
+  it('should create accessory', () => {
     const factory = new MeteoBrightnessAccessoryFactory(api, uuid);
-    const accessory = await factory.createAccessory();
+    const accessory = factory.createAccessory('__name__', '__key__');
 
+    expect(accessory.context.key).toEqual('__key__');
     expect(accessory.context.type).toEqual('meteo-brightness');
   });
 });

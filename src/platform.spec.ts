@@ -398,20 +398,16 @@ describe('Platform', () => {
         queryAPI,
       }),
     );
-    blindAccessoryFactory.createAccessory.mockResolvedValue(accessory);
-    meteoBrightnessAccessoryFactory.createAccessory.mockResolvedValue(
-      accessory,
-    );
-    meteoTemperatureAccessoryFactory.createAccessory.mockResolvedValue(
-      accessory,
-    );
+    blindAccessoryFactory.createAccessory.mockReturnValue(accessory);
+    meteoBrightnessAccessoryFactory.createAccessory.mockReturnValue(accessory);
+    meteoTemperatureAccessoryFactory.createAccessory.mockReturnValue(accessory);
     accessoryExists.mockReturnValue(false);
 
     const platform = new Platform(log, config, api);
     const accessories = await platform.discoverAccessories();
 
     expect(queryAPI.getBlinds).toHaveBeenCalled();
-    expect(blindAccessoryFactory.createAccessory).toHaveBeenCalledWith(blind);
+    expect(blindAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(meteoBrightnessAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(meteoTemperatureAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(configureAccessory).toHaveBeenCalledWith(accessory);
@@ -454,20 +450,16 @@ describe('Platform', () => {
         queryAPI,
       }),
     );
-    blindAccessoryFactory.createAccessory.mockResolvedValue(accessory);
-    meteoBrightnessAccessoryFactory.createAccessory.mockResolvedValue(
-      accessory,
-    );
-    meteoTemperatureAccessoryFactory.createAccessory.mockResolvedValue(
-      accessory,
-    );
+    blindAccessoryFactory.createAccessory.mockReturnValue(accessory);
+    meteoBrightnessAccessoryFactory.createAccessory.mockReturnValue(accessory);
+    meteoTemperatureAccessoryFactory.createAccessory.mockReturnValue(accessory);
     accessoryExists.mockReturnValue(true);
 
     const platform = new Platform(log, config, api);
     const accessories = await platform.discoverAccessories();
 
     expect(queryAPI.getBlinds).toHaveBeenCalled();
-    expect(blindAccessoryFactory.createAccessory).toHaveBeenCalledWith(blind);
+    expect(blindAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(meteoBrightnessAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(meteoTemperatureAccessoryFactory.createAccessory).toHaveBeenCalled();
     expect(configureAccessory).not.toHaveBeenCalled();

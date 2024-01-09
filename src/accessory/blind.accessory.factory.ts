@@ -5,7 +5,6 @@ import {
   Service as PlatformService,
 } from 'homebridge';
 
-import { BlindAPI } from '../api';
 import { UUID } from '../uuid';
 
 let Accessory: typeof PlatformAccessory;
@@ -20,16 +19,15 @@ export class BlindAccessoryFactory {
     Service = api.hap.Service;
   }
 
-  async createAccessory(blind: BlindAPI): Promise<PlatformAccessory> {
-    const displayName = await blind.getName();
-    const uuid = this.uuid.generate(`blinds/${blind.key}`);
+  createAccessory(displayName: string, key: string): PlatformAccessory {
+    const uuid = this.uuid.generate(`blinds/${key}`);
     const accessory = new Accessory(
       displayName,
       uuid,
       Categories.WINDOW_COVERING,
     );
 
-    accessory.context.key = blind.key;
+    accessory.context.key = key;
     accessory.context.type = 'blind';
     accessory.addService(Service.WindowCovering);
 

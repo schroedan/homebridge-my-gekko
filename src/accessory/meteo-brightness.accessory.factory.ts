@@ -19,11 +19,11 @@ export class MeteoBrightnessAccessoryFactory {
     Service = api.hap.Service;
   }
 
-  async createAccessory(): Promise<PlatformAccessory> {
-    const displayName = 'Meteo Brightness';
-    const uuid = this.uuid.generate('meteo/brightness');
+  createAccessory(displayName: string, key: string): PlatformAccessory {
+    const uuid = this.uuid.generate(`meteo/${key}`);
     const accessory = new Accessory(displayName, uuid, Categories.OTHER);
 
+    accessory.context.key = key;
     accessory.context.type = 'meteo-brightness';
     accessory.addService(Service.LightSensor);
 
