@@ -25,6 +25,10 @@ Add platform to `config.json`, for configuration see below.
 
 ## Configuration
 
+The plugin can connect either locally or via myGEKKO Plus.
+
+### Local QueryAPI
+
 ```json
 {
   "platforms": [
@@ -37,6 +41,7 @@ Add platform to `config.json`, for configuration see below.
       "blinds": true,
       "meteo": true,
       "ttl": 1,
+      "retries": 1,
       "interval": 3,
       "deferance": 10,
       "delay": 500
@@ -48,9 +53,39 @@ Add platform to `config.json`, for configuration see below.
 Either the IP or the hostname of your myGEKKO can be configured as `host`. Please ensure that the local QueryAPI is enabled.
 The `username` and `password` must be defined in the local QueryAPI settings of your myGEKKO.
 
+### Plus Query API
+
+```json
+{
+  "platforms": [
+    {
+      "name": "myGEKKO",
+      "plus": true,
+      "username": "<username>",
+      "key": "<key>",
+      "gekkoid": "<gekkoid>",
+      "platform": "mygekko",
+      "blinds": true,
+      "meteo": true,
+      "ttl": 1,
+      "retries": 1,
+      "interval": 3,
+      "deferance": 10,
+      "delay": 500
+    }
+  ]
+}
+```
+
+The `username` here is the myGEKKO Plus user name and the `key` is generated via "Advanced settings" in the myGEKKO Plus menu.
+The `gekkoid` is displayed in the System info menu (Gear > System info > myGEKKO ID).
+
+### Advanced Settings
+
 The discovery of blind and/or meteo accessories can be disabled by setting the `blinds` and/or `meteo` options to `false`.
 
-Feel free to adjust the options for client cache TTL (`ttl` in seconds), update interval (`interval` in seconds), allocation deferance (`deferance` in seconds) and allocation delay (`delay` in milliseconds).
+Feel free to adjust the options for client cache TTL (`ttl` in seconds), number of retries (`retries`), update interval (`interval` in seconds),
+allocation deferance (`deferance` in seconds) and allocation delay (`delay` in milliseconds).
 
 ## Debugging
 
