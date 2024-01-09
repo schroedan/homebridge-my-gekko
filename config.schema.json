@@ -9,74 +9,81 @@
     "properties": {
       "name": {
         "title": "Name",
+        "description": "Plugin name as displayed in the Homebridge log.",
         "type": "string",
-        "default": "myGEKKO",
-        "required": true
+        "required": true,
+        "default": "myGEKKO"
       },
       "plus": {
         "title": "QueryAPI plus",
+        "description": "Use myGEKKO plus service instead of local connection.",
         "type": "boolean",
         "required": true,
-        "description": "Use myGEKKO plus service"
+        "default": false
       },
       "host": {
         "title": "QueryAPI host",
+        "description": "The IP or hostname of your myGEKKO.",
         "type": "string",
         "required": true,
-        "description": "The host of your myGEKKO",
         "condition": {
           "functionBody": "return !model.plus;"
         }
       },
       "username": {
         "title": "QueryAPI username",
+        "description": "The username of your QueryAPI user.",
         "type": "string",
-        "required": true,
-        "description": "The username of your QueryAPI user"
+        "required": true
       },
       "password": {
         "title": "QueryAPI password",
+        "description": "The password of your QueryAPI user.",
         "type": "string",
         "required": true,
-        "description": "The password of your QueryAPI user",
         "condition": {
           "functionBody": "return !model.plus;"
         }
       },
       "key": {
         "title": "QueryAPI key",
+        "description": "The key of your QueryAPI user.",
         "type": "string",
         "required": true,
-        "description": "The key of your QueryAPI user",
         "condition": {
           "functionBody": "return !!model.plus;"
         }
       },
       "gekkoid": {
         "title": "QueryAPI gekkoid",
+        "description": "The ID of your myGEKKO.",
         "type": "string",
         "required": true,
-        "description": "The ID of your myGEKKO",
         "condition": {
           "functionBody": "return !!model.plus;"
         }
       },
       "blinds": {
         "title": "Discover blind accessories",
+        "description": "Whether or not to discover blind accessories.",
         "type": "boolean",
-        "default": true,
-        "required": true
+        "required": true,
+        "default": true
       },
       "meteo": {
         "title": "Discover meteo accessories",
+        "description": "Whether or not to discover meteo accessories.",
         "type": "boolean",
-        "default": true,
-        "required": true
+        "required": true,
+        "default": true
       },
       "ttl": {
-        "title": "Client cache TTL in seconds",
-        "type": "number",
-        "placeholder": 1
+        "title": "Client cache TTL",
+        "description": "The time, in seconds, in which responses from myGEKKO are cached.  Default: 1.",
+        "type": "integer",
+        "default": 1,
+        "minimum": 0,
+        "maximum": 30
       },
       "retries": {
         "title": "Client retries",
@@ -87,22 +94,53 @@
         "maximum": 10
       },
       "interval": {
-        "title": "Update interval in seconds",
-        "type": "number",
-        "placeholder": 3
+        "title": "Update interval",
+        "description": "The time, in seconds, to wait before sending the next request.  Default: 3.",
+        "type": "integer",
+        "default": 3,
+        "minimum": 1,
+        "maximum": 10
       },
       "deferance": {
-        "title": "Update deferance after allocation in seconds",
-        "type": "number",
-        "placeholder": 10
+        "title": "Update deferance after allocation",
+        "description": "The time, in seconds, to wait before resetting a characteristic value.  Default: 10.",
+        "type": "integer",
+        "default": 10,
+        "minimum": 0,
+        "maximum": 30
       },
       "delay": {
-        "title": "Allocation delay in milliseconds",
-        "type": "number",
-        "placeholder": 500
+        "title": "Allocation delay",
+        "description": "The time, in milliseconds, to wait before applying a characteristic value.  Default: 500.",
+        "type": "integer",
+        "default": 500,
+        "minimum": 100,
+        "maximum": 1000
       }
     }
   },
-  "form": null,
-  "display": null
+  "layout": [
+    "name",
+    "plus",
+    "host",
+    "username",
+    "password",
+    "key",
+    "gekkoid",
+    {
+      "type": "fieldset",
+      "expandable": true,
+      "title": "Advanced Settings",
+      "description": "Don't change these, unless you understand what you're doing.",
+      "items": [
+        "blinds",
+        "meteo",
+        "ttl",
+        "retries",
+        "interval",
+        "deferance",
+        "delay"
+      ]
+    }
+  ]
 }
