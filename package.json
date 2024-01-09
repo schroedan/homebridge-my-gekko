@@ -1,6 +1,6 @@
 {
   "name": "homebridge-my-gekko",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "myGEKKO Platform Plugin for Homebridge",
   "keywords": [
     "homebridge",
@@ -35,29 +35,29 @@
     "url": "http://github.com/schroedan/homebridge-my-gekko/issues"
   },
   "dependencies": {
-    "axios": "^1.6.4",
-    "axios-cache-interceptor": "^1.4.1",
-    "axios-retry": "^4.0.0"
+    "axios": "^1.7.2",
+    "axios-cache-interceptor": "^1.5.3",
+    "axios-retry": "^4.4.1"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.11",
-    "@types/node": "^18.19.3",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
-    "eslint": "^8.56.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.10",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-jest": "^27.6.0",
-    "homebridge": "^1.7.0",
-    "homebridge-config-ui-x": "^4.54.1",
+    "eslint-plugin-jest": "^27.9.0",
+    "homebridge": "^1.8.3",
+    "homebridge-config-ui-x": "^4.56.4",
     "jest": "^29.7.0",
-    "jest-mock-extended": "^3.0.5",
-    "nodemon": "^3.0.2",
-    "prettier": "^3.1.1",
-    "prettier-eslint": "^16.2.0",
-    "prettier-plugin-organize-imports": "^3.2.4",
-    "rimraf": "^5.0.5",
-    "ts-jest": "^29.1.1",
+    "jest-mock-extended": "^3.0.7",
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.2",
+    "prettier-eslint": "^16.3.0",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "rimraf": "^5.0.8",
+    "ts-jest": "^29.1.5",
     "ts-node": "^10.9.1",
-    "typescript": "^5.3.3"
+    "typescript": "~5.3.3"
   }
 }
