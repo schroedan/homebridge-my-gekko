@@ -30,6 +30,7 @@ describe('Meteo Temperature Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     expect(observer.characteristics).toBe(characteristics);
@@ -47,6 +48,7 @@ describe('Meteo Temperature Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     observer.registerListeners();
@@ -62,6 +64,7 @@ describe('Meteo Temperature Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     await observer.updateCurrentTemperature();
@@ -79,6 +82,7 @@ describe('Meteo Temperature Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     await observer.updateCurrentTemperature();
@@ -95,6 +99,7 @@ describe('Meteo Temperature Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     observer.registerListeners();

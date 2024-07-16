@@ -128,8 +128,9 @@ export class BlindAPI {
 
   async getPosition(): Promise<number> {
     const status = await this.getStatus();
+    const value = this.extractValue(status.sumstate.value, 1);
 
-    return parseFloat(this.extractValue(status.sumstate.value, 1));
+    return Math.round((parseFloat(value) + Number.EPSILON) * 100) / 100;
   }
 
   async setPosition(position: number): Promise<void> {
@@ -138,8 +139,9 @@ export class BlindAPI {
 
   async getAngle(): Promise<number> {
     const status = await this.getStatus();
+    const value = this.extractValue(status.sumstate.value, 2);
 
-    return parseInt(this.extractValue(status.sumstate.value, 2));
+    return parseInt(value);
   }
 
   async setAngle(angle: number): Promise<void> {
@@ -148,13 +150,15 @@ export class BlindAPI {
 
   async getSumState(): Promise<BlindSumState> {
     const status = await this.getStatus();
+    const value = this.extractValue(status.sumstate.value, 3);
 
-    return this.extractValue(status.sumstate.value, 3) as BlindSumState;
+    return value as BlindSumState;
   }
 
   async getSlatRotationArea(): Promise<number> {
     const status = await this.getStatus();
+    const value = this.extractValue(status.sumstate.value, 4);
 
-    return parseInt(this.extractValue(status.sumstate.value, 4));
+    return parseInt(value);
   }
 }

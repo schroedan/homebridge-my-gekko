@@ -40,6 +40,7 @@ The plugin can connect either locally or via myGEKKO Plus.
       "platform": "mygekko",
       "blinds": true,
       "meteo": true,
+      "meteoCacheSize": 10,
       "ttl": 1,
       "retries": 1,
       "interval": 3,
@@ -67,6 +68,7 @@ The `username` and `password` must be defined in the local QueryAPI settings of 
       "platform": "mygekko",
       "blinds": true,
       "meteo": true,
+      "meteoCacheSize": 10,
       "ttl": 1,
       "retries": 1,
       "interval": 3,
@@ -83,6 +85,8 @@ The `gekkoid` is displayed in the System info menu (Gear > System info > myGEKKO
 ### Advanced Settings
 
 The discovery of blind and/or meteo accessories can be disabled by setting the `blinds` and/or `meteo` options to `false`.
+
+There is a cache to normalise the `meteo` values. The number of values for normalisation can be configured via `meteoCacheSize`.
 
 Feel free to adjust the options for client cache TTL (`ttl` in seconds), number of retries (`retries`), update interval (`interval` in seconds),
 allocation deferance (`deferance` in seconds) and allocation delay (`delay` in milliseconds).

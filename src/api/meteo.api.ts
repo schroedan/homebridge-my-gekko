@@ -60,6 +60,10 @@ export class MeteoAPI {
     return status.globals.meteo;
   }
 
+  protected convertValueToNumber(value: string): number {
+    return Math.round((parseFloat(value) + Number.EPSILON) * 1000000) / 1000000;
+  }
+
   protected convertFormatToUnit(format: string): string {
     const groups = format.match(/[a-z]+\[[0-9-\.]+,[0-9-\.]+\]\((.+)\)/);
     const unit = (groups || []).pop();
@@ -76,7 +80,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.twilight.value),
+      value: this.convertValueToNumber(status.twilight.value),
       unit: this.convertFormatToUnit(resource.twilight.format),
     };
   }
@@ -86,7 +90,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.brightness.value),
+      value: this.convertValueToNumber(status.brightness.value),
       unit: this.convertFormatToUnit(resource.brightness.format),
     };
   }
@@ -96,7 +100,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.brightnesso.value),
+      value: this.convertValueToNumber(status.brightnesso.value),
       unit: this.convertFormatToUnit(resource.brightnesso.format),
     };
   }
@@ -106,7 +110,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.brightnessw.value),
+      value: this.convertValueToNumber(status.brightnessw.value),
       unit: this.convertFormatToUnit(resource.brightnessw.format),
     };
   }
@@ -116,7 +120,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.wind.value),
+      value: this.convertValueToNumber(status.wind.value),
       unit: this.convertFormatToUnit(resource.wind.format),
     };
   }
@@ -126,7 +130,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.temperature.value),
+      value: this.convertValueToNumber(status.temperature.value),
       unit: this.convertFormatToUnit(resource.temperature.format),
     };
   }
@@ -136,7 +140,7 @@ export class MeteoAPI {
     const status = await this.getStatus();
 
     return {
-      value: parseFloat(status.rain.value),
+      value: this.convertValueToNumber(status.rain.value),
       unit: this.convertFormatToUnit(resource.rain.format),
     };
   }

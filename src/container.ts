@@ -52,6 +52,7 @@ export class Container {
         name: 'myGEKKO',
         blinds: true,
         meteo: true,
+        meteoCacheSize: 10,
         ttl: 1,
         interval: 3,
         deferance: 10,
@@ -142,6 +143,7 @@ export class Container {
       this._meteoBrightnessObserverFactory = new MeteoBrightnessObserverFactory(
         this.eventEmitter,
         this.logger,
+        this.config.meteoCacheSize,
       );
     }
 
@@ -169,7 +171,11 @@ export class Container {
   get meteoTemperatureObserverFactory(): MeteoTemperatureObserverFactory {
     if (this._meteoTemperatureObserverFactory === undefined) {
       this._meteoTemperatureObserverFactory =
-        new MeteoTemperatureObserverFactory(this.eventEmitter, this.logger);
+        new MeteoTemperatureObserverFactory(
+          this.eventEmitter,
+          this.logger,
+          this.config.meteoCacheSize,
+        );
     }
 
     return this._meteoTemperatureObserverFactory;

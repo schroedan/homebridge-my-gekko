@@ -77,6 +77,14 @@
         "required": true,
         "default": true
       },
+      "meteoCacheSize": {
+        "title": "Meteo cache size",
+        "description": "The number of values to calculate the average value for the meteo accessories.  Default: 10.",
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 600
+      },
       "ttl": {
         "title": "Client cache TTL",
         "description": "The time, in seconds, in which responses from myGEKKO are cached.  Default: 1.",
@@ -135,6 +143,7 @@
       "items": [
         "blinds",
         "meteo",
+        "meteoCacheSize",
         "ttl",
         "retries",
         "interval",

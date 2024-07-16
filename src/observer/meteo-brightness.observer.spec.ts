@@ -31,6 +31,7 @@ describe('Meteo Brightness Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     expect(observer.characteristics).toBe(characteristics);
@@ -48,6 +49,7 @@ describe('Meteo Brightness Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     observer.registerListeners();
@@ -63,6 +65,7 @@ describe('Meteo Brightness Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     await observer.updateCurrentAmbientLightLevel();
@@ -82,6 +85,7 @@ describe('Meteo Brightness Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     await observer.updateCurrentAmbientLightLevel();
@@ -103,6 +107,7 @@ describe('Meteo Brightness Observer', () => {
       characteristics,
       eventEmitter,
       logger,
+      1,
     );
 
     observer.registerListeners();

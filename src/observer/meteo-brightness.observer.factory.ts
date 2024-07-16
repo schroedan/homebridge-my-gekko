@@ -8,6 +8,7 @@ export class MeteoBrightnessObserverFactory {
   constructor(
     readonly eventEmitter: PlatformEventEmitter,
     readonly logger: Logging,
+    readonly cacheSize = 10,
   ) {}
 
   createObserver(
@@ -17,6 +18,7 @@ export class MeteoBrightnessObserverFactory {
       characteristics,
       this.eventEmitter,
       this.logger,
+      this.cacheSize,
     );
   }
 }
