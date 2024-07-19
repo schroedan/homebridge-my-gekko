@@ -21,6 +21,9 @@ describe('Meteo Brightness Characteristics', () => {
     service = mock<Service>();
     meteo = mock<MeteoAPI>();
   });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it('should provide api, service and meteo', () => {
     const characteristics = new MeteoBrightnessCharacteristics(
       api,

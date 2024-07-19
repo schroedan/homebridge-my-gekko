@@ -30,6 +30,9 @@ describe('Blind Characteristics Factory', () => {
     logger = mock<Logging>();
     eventEmitter = mock<PlatformEventEmitter>();
   });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it('should reject creation of characteristics for invalid service', async () => {
     const accessory = mock<PlatformAccessory>({
       category: Categories.WINDOW_COVERING,

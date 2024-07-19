@@ -62,9 +62,19 @@ export class BlindCharacteristics {
 
     this.targetPosition.onSet((value: CharacteristicValue) => {
       this.usher.set(() => {
-        this.setPosition(value).catch((reason) => {
-          this.logger.error(reason);
-        });
+        this.getPosition()
+          .then((currentValue) => {
+            if (currentValue === value) {
+              return;
+            }
+
+            this.setPosition(value).catch((reason) => {
+              this.logger.error(reason);
+            });
+          })
+          .catch((reason) => {
+            this.logger.error(reason);
+          });
       });
     });
 

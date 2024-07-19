@@ -21,6 +21,9 @@ describe('Meteo Brightness Characteristics Factory', () => {
     });
     queryAPI = mock<QueryAPI>();
   });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it('should reject creation of characteristics for invalid service', async () => {
     const accessory = mock<PlatformAccessory>({
       category: Categories.OTHER,
