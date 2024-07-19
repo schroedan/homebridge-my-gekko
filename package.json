@@ -1,6 +1,6 @@
 {
   "name": "homebridge-my-gekko",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "myGEKKO Platform Plugin for Homebridge",
   "keywords": [
     "homebridge",
