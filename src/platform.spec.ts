@@ -128,7 +128,9 @@ describe('Platform', () => {
 
     api.on.mockImplementation(
       (event: 'didFinishLaunching' | 'shutdown', listener: () => void) => {
-        event === 'didFinishLaunching' && listener();
+        if (event === 'didFinishLaunching') {
+          listener();
+        }
         return api;
       },
     );
@@ -155,7 +157,9 @@ describe('Platform', () => {
 
     api.on.mockImplementation(
       (event: 'didFinishLaunching' | 'shutdown', listener: () => void) => {
-        event === 'shutdown' && listener();
+        if (event === 'shutdown') {
+          listener();
+        }
         return api;
       },
     );
