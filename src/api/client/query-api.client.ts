@@ -24,18 +24,15 @@ export function createInstance(config: {
   ttl?: number;
   retries?: number;
 }): AxiosCacheInstance {
-  const instance = setupCache(
-    axios.create({
-      auth: config.auth,
-      baseURL: config.baseURL,
-      params: config.params,
-    }),
-    {
-      ttl: config.ttl,
-    },
-  );
+  const instance = axios.create({
+    auth: config.auth,
+    baseURL: config.baseURL,
+    params: config.params,
+  });
 
   axiosRetry(instance, { retries: config.retries });
 
-  return instance;
+  return setupCache(instance, {
+    ttl: config.ttl,
+  });
 }

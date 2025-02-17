@@ -1,4 +1,4 @@
-/* eslint-disable */
+/** @type {import('jest').Config} */
 module.exports = {
   collectCoverageFrom: ['**/*.ts'],
   coverageDirectory: './coverage',

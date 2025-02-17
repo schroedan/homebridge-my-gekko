@@ -1,8 +1,8 @@
 import { API } from 'homebridge';
-import { mock, MockProxy } from 'jest-mock-extended';
+import { MockProxy, mock } from 'jest-mock-extended';
 
 import main from './main';
-import { Platform, PLATFORM_NAME, PLUGIN_IDENTIFIER } from './platform';
+import { PLATFORM_NAME, PLUGIN_IDENTIFIER, Platform } from './platform';
 
 describe('Main', () => {
   let api: MockProxy<API>;
