@@ -727,4 +727,28 @@ describe('Platform', () => {
     expect(configureMeteoTemperatureAccessory).toHaveBeenCalledWith(accessory);
     expect(log.error).toHaveBeenCalledWith('__reason__');
   });
+  it('should log warnings on unknown accessory configuration', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const eventEmitter = mock<PlatformEventEmitter>();
+
+    const accessory = mock<PlatformAccessory>({
+      category: Categories.OTHER,
+    });
+
+    accessory.context.type = 'unknown';
+
+    getContainer.mockReturnValue(
+      mock<Container>({ api, eventEmitter, logger: log }),
+    );
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(accessory);
+
+    await new Promise(setImmediate);
+
+    expect(log.warn).toHaveBeenCalledWith(
+      'Accessory category 1 (type: unknown) unknown to this platform',
+    );
+  });
 });
