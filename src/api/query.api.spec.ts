@@ -208,7 +208,7 @@ describe('Query API', () => {
   it('should get status', async () => {
     const status = mock<Status>();
 
-    instance.get.mockImplementation(() => Promise.resolve({ data: status }));
+    instance.get.mockResolvedValue({ data: status });
 
     const api = new QueryAPI(client);
 
