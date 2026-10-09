@@ -1,6 +1,6 @@
 /** @type {import('jest').Config} */
-module.exports = {
-  collectCoverageFrom: ['**/*.ts'],
+export default {
+  collectCoverageFrom: ['src/**/*.ts', '!src/test/**'],
   coverageDirectory: './coverage',
   coverageReporters: ['html', 'json-summary', 'text', 'text-summary'],
   coverageThreshold: {

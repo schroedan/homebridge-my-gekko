@@ -1,10 +1,5 @@
-import {
-  API,
-  Logging,
-  PlatformConfig,
-  Service as PlatformService,
-} from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API, Logging, PlatformConfig } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
 import {
   BlindAccessoryFactory,
@@ -25,6 +20,12 @@ import {
   MeteoTemperatureObserverFactory,
 } from './observer';
 import { PlatformEventEmitter } from './platform-events';
+import {
+  mockAPI,
+  mockLogging,
+  mockPlatformConfig,
+  mockServiceClass,
+} from './test/mocks';
 import { UUID } from './uuid';
 
 describe('Container', () => {
@@ -32,11 +33,11 @@ describe('Container', () => {
   let logger: MockProxy<Logging>;
   let api: MockProxy<API>;
   beforeEach(() => {
-    config = mock<PlatformConfig>();
-    logger = mock<Logging>();
-    api = mock<API>({
+    config = mockPlatformConfig();
+    logger = mockLogging();
+    api = mockAPI({
       hap: {
-        Service: mock<typeof PlatformService>(),
+        Service: mockServiceClass(),
       },
     });
   });

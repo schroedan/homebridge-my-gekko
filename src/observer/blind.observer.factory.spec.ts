@@ -1,9 +1,15 @@
 import { Logging, PlatformConfig } from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
-import { BlindCharacteristics } from '../characteristics';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';
+import {
+  mockBlindCharacteristics,
+  mockInterval,
+  mockLogging,
+  mockPlatformConfig,
+  mockPlatformEventEmitter,
+} from '../test/mocks';
 import { BlindObserver } from './blind.observer';
 import { BlindObserverFactory } from './blind.observer.factory';
 
@@ -13,13 +19,13 @@ describe('Blind Observer Factory', () => {
   let heartbeat: MockProxy<Interval<() => void>>;
   let config: MockProxy<PlatformConfig>;
   beforeEach(() => {
-    eventEmitter = mock<PlatformEventEmitter>();
-    logger = mock<Logging>();
-    heartbeat = mock<Interval<() => void>>();
-    config = mock<PlatformConfig>();
+    eventEmitter = mockPlatformEventEmitter();
+    logger = mockLogging();
+    heartbeat = mockInterval();
+    config = mockPlatformConfig();
   });
   it('should create observer', async () => {
-    const characteristics = mock<BlindCharacteristics>();
+    const characteristics = mockBlindCharacteristics();
 
     const blind = new BlindObserverFactory(
       eventEmitter,

@@ -1,6 +1,12 @@
-import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API, PlatformAccessory } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
+import {
+  mockAPI,
+  mockPlatformAccessory,
+  mockServiceClass,
+  mockUUID,
+} from '../test/mocks';
 import { UUID } from '../uuid';
 import { BlindAccessoryFactory } from './blind.accessory.factory';
 
@@ -8,17 +14,17 @@ describe('Blind Accessory Factory', () => {
   let api: MockProxy<API>;
   let uuid: MockProxy<UUID>;
   beforeEach(() => {
-    api = mock<API>({
+    api = mockAPI({
       hap: {
-        Service: mock<typeof PlatformService>(),
+        Service: mockServiceClass(),
       },
       platformAccessory: jest
         .fn()
         .mockImplementation(() =>
-          mock<PlatformAccessory>(),
+          mockPlatformAccessory(),
         ) as unknown as typeof PlatformAccessory,
     });
-    uuid = mock<UUID>();
+    uuid = mockUUID();
   });
   it('should create accessory', () => {
     const factory = new BlindAccessoryFactory(api, uuid);

@@ -1,5 +1,6 @@
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
+import { mockQueryAPI } from '../test/mocks';
 import { NetworkAPI, NetworkLanguage } from './network.api';
 import { QueryAPI, Status } from './query.api';
 
@@ -24,7 +25,7 @@ describe('Network API', () => {
   };
   let api: MockProxy<QueryAPI>;
   beforeEach(() => {
-    api = mock<QueryAPI>();
+    api = mockQueryAPI();
   });
   it('should provide API', () => {
     const network = new NetworkAPI(api);

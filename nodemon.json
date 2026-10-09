@@ -2,7 +2,7 @@
   "watch": ["src"],
   "ext": "ts",
   "ignore": [],
-  "exec": "tsc && homebridge -D -I -U .homebridge",
+  "exec": "tsc -p tsconfig.build.json && homebridge -D -I -U .homebridge",
   "signal": "SIGTERM",
   "env": {
     "NODE_OPTIONS": "--trace-warnings"

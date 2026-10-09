@@ -1,13 +1,12 @@
 import {
   API,
-  APIEvent,
-  Categories,
   DynamicPlatformPlugin,
   Logging,
   PlatformAccessory,
   PlatformConfig,
 } from 'homebridge';
 
+import { Categories } from './categories';
 import { Container } from './container';
 
 export const PLUGIN_IDENTIFIER = 'homebridge-my-gekko';
@@ -16,7 +15,7 @@ export const PLATFORM_NAME = 'mygekko';
 
 export class Platform implements DynamicPlatformPlugin {
   private _accessories: PlatformAccessory[] = [];
-  private _container = new Container(this.config, this.logger, this.api);
+  private _container: Container;
 
   get container(): Container {
     return this._container;
@@ -27,6 +26,8 @@ export class Platform implements DynamicPlatformPlugin {
     readonly config: PlatformConfig,
     readonly api: API,
   ) {
+    this._container = new Container(config, logger, api);
+
     if (this.isConfigInvalid()) {
       this.container.logger.error(
         'Platform config missing - please check the config file',
@@ -48,13 +49,13 @@ export class Platform implements DynamicPlatformPlugin {
   }
 
   registerListeners(): void {
-    this.container.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
+    this.container.api.on('didFinishLaunching', () => {
       this.container.heartbeat.set(() => {
         this.container.eventEmitter.signalHeartbeat();
       });
     });
 
-    this.container.api.on(APIEvent.SHUTDOWN, () => {
+    this.container.api.on('shutdown', () => {
       this.container.eventEmitter.signalShutdown();
     });
 

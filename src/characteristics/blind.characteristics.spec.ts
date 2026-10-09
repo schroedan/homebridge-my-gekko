@@ -1,15 +1,20 @@
-import {
-  API,
-  Logging,
-  PlatformConfig,
-  Characteristic as ServcieCharacteristic,
-  Service,
-} from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API, Logging, PlatformConfig, Service } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
 import { BlindAPI, BlindState, BlindSumState } from '../api';
 import { Delay } from '../delay';
 import { PlatformEventEmitter } from '../platform-events';
+import {
+  mockAPI,
+  mockBlindAPI,
+  mockCharacteristic,
+  mockCharacteristicClass,
+  mockDelay,
+  mockLogging,
+  mockPlatformConfig,
+  mockPlatformEventEmitter,
+  mockService,
+} from '../test/mocks';
 import { BlindCharacteristics } from './blind.characteristics';
 
 describe('Blind Characteristics', () => {
@@ -20,16 +25,16 @@ describe('Blind Characteristics', () => {
   let logger: MockProxy<Logging>;
   let eventEmitter: MockProxy<PlatformEventEmitter>;
   beforeEach(() => {
-    api = mock<API>({
+    api = mockAPI({
       hap: {
-        Characteristic: mock<typeof ServcieCharacteristic>(),
+        Characteristic: mockCharacteristicClass(),
       },
     });
-    service = mock<Service>();
-    blind = mock<BlindAPI>();
-    config = mock<PlatformConfig>();
-    logger = mock<Logging>();
-    eventEmitter = mock<PlatformEventEmitter>();
+    service = mockService();
+    blind = mockBlindAPI();
+    config = mockPlatformConfig();
+    logger = mockLogging();
+    eventEmitter = mockPlatformEventEmitter();
     jest.useFakeTimers();
   });
   afterEach(() => {
@@ -53,7 +58,7 @@ describe('Blind Characteristics', () => {
     expect(characteristics.eventEmitter).toBe(eventEmitter);
   });
   it('should provide name characteristic', () => {
-    const name = mock<ServcieCharacteristic>();
+    const name = mockCharacteristic();
     const characteristics = new BlindCharacteristics(
       api,
       service,
@@ -71,7 +76,7 @@ describe('Blind Characteristics', () => {
     );
   });
   it('should provide current position characteristic', () => {
-    const currentPosition = mock<ServcieCharacteristic>();
+    const currentPosition = mockCharacteristic();
     const characteristics = new BlindCharacteristics(
       api,
       service,
@@ -89,7 +94,7 @@ describe('Blind Characteristics', () => {
     );
   });
   it('should provide target position characteristic', () => {
-    const targetPosition = mock<ServcieCharacteristic>();
+    const targetPosition = mockCharacteristic();
     const characteristics = new BlindCharacteristics(
       api,
       service,
@@ -107,7 +112,7 @@ describe('Blind Characteristics', () => {
     );
   });
   it('should provide position state characteristic', () => {
-    const positionState = mock<ServcieCharacteristic>();
+    const positionState = mockCharacteristic();
     const characteristics = new BlindCharacteristics(
       api,
       service,
@@ -125,7 +130,7 @@ describe('Blind Characteristics', () => {
     );
   });
   it('should provide obstruction detected characteristic', () => {
-    const obstructionDetected = mock<ServcieCharacteristic>();
+    const obstructionDetected = mockCharacteristic();
     const characteristics = new BlindCharacteristics(
       api,
       service,
@@ -170,12 +175,12 @@ describe('Blind Characteristics', () => {
     expect(characteristics.usher).toBe(usher);
   });
   it('should register listeners', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     usher.set.mockImplementation((callback) => {
       callback();
@@ -236,12 +241,12 @@ describe('Blind Characteristics', () => {
     expect(eventEmitter.onShutdown).toHaveBeenCalled();
   });
   it('should return name on get name', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     name.onGet.mockImplementation((handler) => {
       handler(undefined);
@@ -283,12 +288,12 @@ describe('Blind Characteristics', () => {
     expect(blind.getName).toHaveBeenCalled();
   });
   it('should return position on get current position', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     currentPosition.onGet.mockImplementation((handler) => {
       handler(undefined);
@@ -330,12 +335,12 @@ describe('Blind Characteristics', () => {
     expect(blind.getPosition).toHaveBeenCalled();
   });
   it('should apply position after a short delay on set target position', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);
@@ -383,12 +388,12 @@ describe('Blind Characteristics', () => {
     expect(blind.setPosition).toHaveBeenCalledWith(50);
   });
   it('should not apply position after a short delay on set target position', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);
@@ -644,12 +649,12 @@ describe('Blind Characteristics', () => {
     await expect(characteristics.isObstructionDetected()).resolves.toBeTruthy();
   });
   it('should log error on get current position', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);
@@ -698,12 +703,12 @@ describe('Blind Characteristics', () => {
     expect(logger.error).toHaveBeenCalledWith('__reason__');
   });
   it('should log error on set target position', async () => {
-    const name = mock<ServcieCharacteristic>();
-    const currentPosition = mock<ServcieCharacteristic>();
-    const targetPosition = mock<ServcieCharacteristic>();
-    const positionState = mock<ServcieCharacteristic>();
-    const obstructionDetected = mock<ServcieCharacteristic>();
-    const usher = mock<Delay<() => void>>();
+    const name = mockCharacteristic();
+    const currentPosition = mockCharacteristic();
+    const targetPosition = mockCharacteristic();
+    const positionState = mockCharacteristic();
+    const obstructionDetected = mockCharacteristic();
+    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);

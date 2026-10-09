@@ -1,8 +1,12 @@
 import { Logging } from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
-import { MeteoBrightnessCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
+import {
+  mockLogging,
+  mockMeteoBrightnessCharacteristics,
+  mockPlatformEventEmitter,
+} from '../test/mocks';
 import { MeteoBrightnessObserver } from './meteo-brightness.observer';
 import { MeteoBrightnessObserverFactory } from './meteo-brightness.observer.factory';
 
@@ -10,11 +14,11 @@ describe('Meteo Brightness Observer Factory', () => {
   let eventEmitter: MockProxy<PlatformEventEmitter>;
   let logger: MockProxy<Logging>;
   beforeEach(() => {
-    eventEmitter = mock<PlatformEventEmitter>();
-    logger = mock<Logging>();
+    eventEmitter = mockPlatformEventEmitter();
+    logger = mockLogging();
   });
   it('should create observer', async () => {
-    const characteristics = mock<MeteoBrightnessCharacteristics>();
+    const characteristics = mockMeteoBrightnessCharacteristics();
 
     const meteoBrightness = new MeteoBrightnessObserverFactory(
       eventEmitter,

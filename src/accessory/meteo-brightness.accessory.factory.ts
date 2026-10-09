@@ -1,10 +1,6 @@
-import {
-  API,
-  Categories,
-  PlatformAccessory,
-  Service as PlatformService,
-} from 'homebridge';
+import { API, PlatformAccessory, Service as PlatformService } from 'homebridge';
 
+import { Categories } from '../categories';
 import { UUID } from '../uuid';
 
 let Accessory: typeof PlatformAccessory;

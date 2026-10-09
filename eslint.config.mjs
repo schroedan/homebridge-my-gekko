@@ -1,10 +1,10 @@
-const eslint = require('@eslint/js');
-const tseslint = require('typescript-eslint');
-const prettierConfig = require('eslint-config-prettier');
-const jestPlugin = require('eslint-plugin-jest');
+import eslint from '@eslint/js';
+import prettierConfig from 'eslint-config-prettier';
+import jestPlugin from 'eslint-plugin-jest';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 
-/** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigFile} */
-module.exports = tseslint.config(
+export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   prettierConfig,

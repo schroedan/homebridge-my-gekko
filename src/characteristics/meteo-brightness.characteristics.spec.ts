@@ -1,11 +1,14 @@
-import {
-  API,
-  Characteristic as ServcieCharacteristic,
-  Service,
-} from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API, Service } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
 import { MeteoAPI } from '../api';
+import {
+  mockAPI,
+  mockCharacteristic,
+  mockCharacteristicClass,
+  mockMeteoAPI,
+  mockService,
+} from '../test/mocks';
 import { MeteoBrightnessCharacteristics } from './meteo-brightness.characteristics';
 
 describe('Meteo Brightness Characteristics', () => {
@@ -13,13 +16,13 @@ describe('Meteo Brightness Characteristics', () => {
   let service: MockProxy<Service>;
   let meteo: MockProxy<MeteoAPI>;
   beforeEach(() => {
-    api = mock<API>({
+    api = mockAPI({
       hap: {
-        Characteristic: mock<typeof ServcieCharacteristic>(),
+        Characteristic: mockCharacteristicClass(),
       },
     });
-    service = mock<Service>();
-    meteo = mock<MeteoAPI>();
+    service = mockService();
+    meteo = mockMeteoAPI();
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -37,7 +40,7 @@ describe('Meteo Brightness Characteristics', () => {
     expect(characteristics.meteo).toBe(meteo);
   });
   it('should provide current ambient light level characteristic', () => {
-    const currentAmbientLightLevel = mock<ServcieCharacteristic>();
+    const currentAmbientLightLevel = mockCharacteristic();
     const characteristics = new MeteoBrightnessCharacteristics(
       api,
       service,
@@ -55,7 +58,7 @@ describe('Meteo Brightness Characteristics', () => {
     );
   });
   it('should register listeners', () => {
-    const currentAmbientLightLevel = mock<ServcieCharacteristic>();
+    const currentAmbientLightLevel = mockCharacteristic();
 
     currentAmbientLightLevel.setProps.mockReturnThis();
 
@@ -79,7 +82,7 @@ describe('Meteo Brightness Characteristics', () => {
     expect(currentAmbientLightLevel.onGet).toHaveBeenCalled();
   });
   it('should return south brightness on get current ambient light level', () => {
-    const currentAmbientLightLevel = mock<ServcieCharacteristic>();
+    const currentAmbientLightLevel = mockCharacteristic();
 
     currentAmbientLightLevel.setProps.mockReturnThis();
     currentAmbientLightLevel.onGet.mockImplementation((handler) => {

@@ -1,5 +1,6 @@
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
+import { mockQueryAPI } from '../test/mocks';
 import { BlindAPI, BlindState, BlindSumState } from './blind.api';
 import { QueryAPI, Resources, Status } from './query.api';
 
@@ -37,7 +38,7 @@ describe('Blind API', () => {
   };
   let api: MockProxy<QueryAPI>;
   beforeEach(() => {
-    api = mock<QueryAPI>();
+    api = mockQueryAPI();
   });
   it('should provide API', () => {
     const blind = new BlindAPI(api, 'item0');

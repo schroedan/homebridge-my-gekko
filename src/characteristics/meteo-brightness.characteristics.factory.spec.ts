@@ -1,12 +1,16 @@
-import {
-  API,
-  Categories,
-  PlatformAccessory,
-  Service as PlatformService,
-} from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
-import { MeteoAPI, QueryAPI } from '../api';
+import { QueryAPI } from '../api';
+import { Categories } from '../categories';
+import {
+  mockAPI,
+  mockMeteoAPI,
+  mockPlatformAccessory,
+  mockQueryAPI,
+  mockService,
+  mockServiceClass,
+} from '../test/mocks';
 import { MeteoBrightnessCharacteristics } from './meteo-brightness.characteristics';
 import { MeteoBrightnessCharacteristicsFactory } from './meteo-brightness.characteristics.factory';
 
@@ -14,18 +18,18 @@ describe('Meteo Brightness Characteristics Factory', () => {
   let api: MockProxy<API>;
   let queryAPI: MockProxy<QueryAPI>;
   beforeEach(() => {
-    api = mock<API>({
+    api = mockAPI({
       hap: {
-        Service: mock<typeof PlatformService>(),
+        Service: mockServiceClass(),
       },
     });
-    queryAPI = mock<QueryAPI>();
+    queryAPI = mockQueryAPI();
   });
   afterEach(() => {
     jest.clearAllMocks();
   });
   it('should reject creation of characteristics for invalid service', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.OTHER,
     });
 
@@ -39,11 +43,11 @@ describe('Meteo Brightness Characteristics Factory', () => {
     ).rejects.toThrow('Service not found.');
   });
   it('should reject creation of characteristics for invalid meteo', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.OTHER,
     });
 
-    accessory.getService.mockReturnValue(mock<PlatformService>());
+    accessory.getService.mockReturnValue(mockService());
 
     const meteoBrightness = new MeteoBrightnessCharacteristicsFactory(
       api,
@@ -55,12 +59,12 @@ describe('Meteo Brightness Characteristics Factory', () => {
     ).rejects.toThrow('Meteo not found.');
   });
   it('should create characteristics with default direction', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.OTHER,
     });
 
-    accessory.getService.mockReturnValue(mock<PlatformService>());
-    queryAPI.getMeteo.mockResolvedValue(mock<MeteoAPI>());
+    accessory.getService.mockReturnValue(mockService());
+    queryAPI.getMeteo.mockResolvedValue(mockMeteoAPI());
 
     const meteoBrightness = new MeteoBrightnessCharacteristicsFactory(
       api,
@@ -74,15 +78,15 @@ describe('Meteo Brightness Characteristics Factory', () => {
     expect(characteristics.direction).toBe('south');
   });
   it('should create characteristics with east direction', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.OTHER,
       context: {
         key: 'brightnesso',
       },
     });
 
-    accessory.getService.mockReturnValue(mock<PlatformService>());
-    queryAPI.getMeteo.mockResolvedValue(mock<MeteoAPI>());
+    accessory.getService.mockReturnValue(mockService());
+    queryAPI.getMeteo.mockResolvedValue(mockMeteoAPI());
 
     const meteoBrightness = new MeteoBrightnessCharacteristicsFactory(
       api,
@@ -96,15 +100,15 @@ describe('Meteo Brightness Characteristics Factory', () => {
     expect(characteristics.direction).toBe('east');
   });
   it('should create characteristics with default direction', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.OTHER,
       context: {
         key: 'brightnessw',
       },
     });
 
-    accessory.getService.mockReturnValue(mock<PlatformService>());
-    queryAPI.getMeteo.mockResolvedValue(mock<MeteoAPI>());
+    accessory.getService.mockReturnValue(mockService());
+    queryAPI.getMeteo.mockResolvedValue(mockMeteoAPI());
 
     const meteoBrightness = new MeteoBrightnessCharacteristicsFactory(
       api,

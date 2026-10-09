@@ -15,8 +15,6 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 18.x
-          - 20.x
           - 22.x
           - 24.x
 
@@ -33,6 +31,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install --frozen-lockfile --no-audit --no-fund
+
+      - name: Check types
+        run: npm run -- check
 
       - name: Lint source code
         run: npm run -- lint

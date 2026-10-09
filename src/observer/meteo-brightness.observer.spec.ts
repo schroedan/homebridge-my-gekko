@@ -1,8 +1,13 @@
 import { Logging } from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
 import { MeteoBrightnessCharacteristics } from '../characteristics';
 import { PlatformEventEmitter } from '../platform-events';
+import {
+  mockLogging,
+  mockMeteoBrightnessCharacteristics,
+  mockPlatformEventEmitter,
+} from '../test/mocks';
 import { MeteoBrightnessObserver } from './meteo-brightness.observer';
 
 describe('Meteo Brightness Observer', () => {
@@ -10,18 +15,18 @@ describe('Meteo Brightness Observer', () => {
   let eventEmitter: MockProxy<PlatformEventEmitter>;
   let logger: MockProxy<Logging>;
   beforeEach(() => {
-    characteristics = mock<MeteoBrightnessCharacteristics>({
+    characteristics = mockMeteoBrightnessCharacteristics({
       currentAmbientLightLevel: {
         value: 1000.0,
       },
       direction: 'south',
     });
-    eventEmitter = mock<PlatformEventEmitter>({
+    eventEmitter = mockPlatformEventEmitter({
       onHeartbeat: (listener) => {
         listener();
       },
     });
-    logger = mock<Logging>();
+    logger = mockLogging();
   });
   afterEach(() => {
     jest.clearAllMocks();

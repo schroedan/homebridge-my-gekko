@@ -1,9 +1,16 @@
 import { Logging, PlatformConfig } from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
 import { BlindCharacteristics } from '../characteristics';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';
+import {
+  mockBlindCharacteristics,
+  mockInterval,
+  mockLogging,
+  mockPlatformConfig,
+  mockPlatformEventEmitter,
+} from '../test/mocks';
 import { BlindObserver } from './blind.observer';
 
 describe('Blind Observer', () => {
@@ -14,15 +21,15 @@ describe('Blind Observer', () => {
   let config: MockProxy<PlatformConfig>;
 
   beforeEach(() => {
-    characteristics = mock<BlindCharacteristics>();
-    eventEmitter = mock<PlatformEventEmitter>({
+    characteristics = mockBlindCharacteristics();
+    eventEmitter = mockPlatformEventEmitter({
       onHeartbeat: (listener) => {
         listener();
       },
     });
-    logger = mock<Logging>();
-    heartbeat = mock<Interval<() => void>>();
-    config = mock<PlatformConfig>();
+    logger = mockLogging();
+    heartbeat = mockInterval();
+    config = mockPlatformConfig();
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -45,7 +52,7 @@ describe('Blind Observer', () => {
   it('should return that allocation is deferred', () => {
     config.deferance = 10;
 
-    characteristics = mock<BlindCharacteristics>({ usher: { pending: true } });
+    characteristics = mockBlindCharacteristics({ usher: { pending: true } });
 
     const observer = new BlindObserver(
       characteristics,

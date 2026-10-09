@@ -1,5 +1,6 @@
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
+import { mockQueryAPI } from '../test/mocks';
 import { MeteoAPI } from './meteo.api';
 import { QueryAPI, Resources, Status } from './query.api';
 
@@ -88,7 +89,7 @@ describe('Meteo API', () => {
   };
   let api: MockProxy<QueryAPI>;
   beforeEach(() => {
-    api = mock<QueryAPI>();
+    api = mockQueryAPI();
   });
   it('should provide API', () => {
     const meteo = new MeteoAPI(api);

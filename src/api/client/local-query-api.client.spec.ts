@@ -1,13 +1,9 @@
-import { mock } from 'jest-mock-extended';
-
-import {
-  LocalQueryAPIClient,
-  LocalQueryAPIConfig,
-} from './local-query-api.client';
+import { mockLocalQueryAPIConfig } from '../../test/mocks';
+import { LocalQueryAPIClient } from './local-query-api.client';
 
 describe('Local Query API Client', () => {
   it('should provide config', () => {
-    const config = mock<LocalQueryAPIConfig>();
+    const config = mockLocalQueryAPIConfig();
     const client = new LocalQueryAPIClient(config);
 
     expect(client.config).toBe(config);

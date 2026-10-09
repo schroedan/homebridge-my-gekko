@@ -1,3 +1,5 @@
+import { AxiosCacheInstance } from 'axios-cache-interceptor';
+
 import { QueryAPIClient, createInstance } from './query-api.client';
 
 export type LocalQueryAPIConfig = Partial<{
@@ -9,19 +11,25 @@ export type LocalQueryAPIConfig = Partial<{
 }>;
 
 export class LocalQueryAPIClient implements QueryAPIClient {
-  readonly auth = {
-    username: this.config.username || 'mygekko',
-    password: this.config.password || 'mygekko',
-  };
+  readonly auth: { username: string; password: string };
 
-  readonly baseURL = `http://${this.config.host || 'mygekko'}/api/v1`;
+  readonly baseURL: string;
 
-  readonly instance = createInstance({
-    auth: this.auth,
-    baseURL: this.baseURL,
-    ttl: 1000 * (this.config.ttl || 3),
-    retries: this.config.retries || 3,
-  });
+  readonly instance: AxiosCacheInstance;
 
-  constructor(public readonly config: LocalQueryAPIConfig) {}
+  constructor(public readonly config: LocalQueryAPIConfig) {
+    this.auth = {
+      username: config.username || 'mygekko',
+      password: config.password || 'mygekko',
+    };
+
+    this.baseURL = `http://${config.host || 'mygekko'}/api/v1`;
+
+    this.instance = createInstance({
+      auth: this.auth,
+      baseURL: this.baseURL,
+      ttl: 1000 * (config.ttl || 3),
+      retries: config.retries || 3,
+    });
+  }
 }

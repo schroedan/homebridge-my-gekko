@@ -1,15 +1,20 @@
-import {
-  API,
-  Categories,
-  Logging,
-  PlatformAccessory,
-  PlatformConfig,
-  Service as PlatformService,
-} from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API, Logging, PlatformConfig } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
-import { BlindAPI, QueryAPI } from '../api';
+import { QueryAPI } from '../api';
+import { Categories } from '../categories';
 import { PlatformEventEmitter } from '../platform-events';
+import {
+  mockAPI,
+  mockBlindAPI,
+  mockLogging,
+  mockPlatformAccessory,
+  mockPlatformConfig,
+  mockPlatformEventEmitter,
+  mockQueryAPI,
+  mockService,
+  mockServiceClass,
+} from '../test/mocks';
 import { BlindCharacteristics } from './blind.characteristics';
 import { BlindCharacteristicsFactory } from './blind.characteristics.factory';
 
@@ -20,21 +25,21 @@ describe('Blind Characteristics Factory', () => {
   let logger: MockProxy<Logging>;
   let eventEmitter: MockProxy<PlatformEventEmitter>;
   beforeEach(() => {
-    api = mock<API>({
+    api = mockAPI({
       hap: {
-        Service: mock<typeof PlatformService>(),
+        Service: mockServiceClass(),
       },
     });
-    queryAPI = mock<QueryAPI>();
-    config = mock<PlatformConfig>();
-    logger = mock<Logging>();
-    eventEmitter = mock<PlatformEventEmitter>();
+    queryAPI = mockQueryAPI();
+    config = mockPlatformConfig();
+    logger = mockLogging();
+    eventEmitter = mockPlatformEventEmitter();
   });
   afterEach(() => {
     jest.clearAllMocks();
   });
   it('should reject creation of characteristics for invalid service', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.WINDOW_COVERING,
     });
 
@@ -51,11 +56,11 @@ describe('Blind Characteristics Factory', () => {
     );
   });
   it('should reject creation of characteristics for invalid blind', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.WINDOW_COVERING,
     });
 
-    accessory.getService.mockReturnValue(mock<PlatformService>());
+    accessory.getService.mockReturnValue(mockService());
 
     const factory = new BlindCharacteristicsFactory(
       api,
@@ -70,12 +75,12 @@ describe('Blind Characteristics Factory', () => {
     );
   });
   it('should create characteristics', async () => {
-    const accessory = mock<PlatformAccessory>({
+    const accessory = mockPlatformAccessory({
       category: Categories.WINDOW_COVERING,
     });
 
-    accessory.getService.mockReturnValue(mock<PlatformService>());
-    queryAPI.getBlind.mockResolvedValue(mock<BlindAPI>());
+    accessory.getService.mockReturnValue(mockService());
+    queryAPI.getBlind.mockResolvedValue(mockBlindAPI());
 
     const factory = new BlindCharacteristicsFactory(
       api,

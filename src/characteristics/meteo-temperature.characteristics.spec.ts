@@ -1,11 +1,14 @@
-import {
-  API,
-  Characteristic as ServcieCharacteristic,
-  Service,
-} from 'homebridge';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { API, Service } from 'homebridge';
+import { MockProxy } from 'jest-mock-extended';
 
 import { MeteoAPI } from '../api';
+import {
+  mockAPI,
+  mockCharacteristic,
+  mockCharacteristicClass,
+  mockMeteoAPI,
+  mockService,
+} from '../test/mocks';
 import { MeteoTemperatureCharacteristics } from './meteo-temperature.characteristics';
 
 describe('Meteo Temperature Characteristics', () => {
@@ -13,13 +16,13 @@ describe('Meteo Temperature Characteristics', () => {
   let service: MockProxy<Service>;
   let meteo: MockProxy<MeteoAPI>;
   beforeEach(() => {
-    api = mock<API>({
+    api = mockAPI({
       hap: {
-        Characteristic: mock<typeof ServcieCharacteristic>(),
+        Characteristic: mockCharacteristicClass(),
       },
     });
-    service = mock<Service>();
-    meteo = mock<MeteoAPI>();
+    service = mockService();
+    meteo = mockMeteoAPI();
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -36,7 +39,7 @@ describe('Meteo Temperature Characteristics', () => {
     expect(characteristics.meteo).toBe(meteo);
   });
   it('should provide current temperature characteristic', () => {
-    const currentTemperature = mock<ServcieCharacteristic>();
+    const currentTemperature = mockCharacteristic();
     const characteristics = new MeteoTemperatureCharacteristics(
       api,
       service,
@@ -51,7 +54,7 @@ describe('Meteo Temperature Characteristics', () => {
     );
   });
   it('should register listeners', () => {
-    const currentTemperature = mock<ServcieCharacteristic>();
+    const currentTemperature = mockCharacteristic();
 
     jest
       .spyOn(
@@ -72,7 +75,7 @@ describe('Meteo Temperature Characteristics', () => {
     expect(currentTemperature.onGet).toHaveBeenCalled();
   });
   it('should return temperature on get current temperature', () => {
-    const currentTemperature = mock<ServcieCharacteristic>();
+    const currentTemperature = mockCharacteristic();
 
     currentTemperature.onGet.mockImplementation((handler) => {
       handler(undefined);

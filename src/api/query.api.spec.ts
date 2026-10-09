@@ -1,18 +1,24 @@
 import { AxiosCacheInstance } from 'axios-cache-interceptor';
-import { MockProxy, mock } from 'jest-mock-extended';
+import { MockProxy } from 'jest-mock-extended';
 
+import {
+  mockAxiosCacheInstance,
+  mockQueryAPIClient,
+  mockResources,
+  mockStatus,
+} from '../test/mocks';
 import { BlindAPI } from './blind.api';
 import { QueryAPIClient } from './client';
 import { MeteoAPI } from './meteo.api';
 import { NetworkAPI } from './network.api';
-import { QueryAPI, Resources, Status } from './query.api';
+import { QueryAPI } from './query.api';
 
 describe('Query API', () => {
   let instance: MockProxy<AxiosCacheInstance>;
   let client: MockProxy<QueryAPIClient>;
   beforeEach(() => {
-    instance = mock<AxiosCacheInstance>();
-    client = mock<QueryAPIClient>({ instance });
+    instance = mockAxiosCacheInstance();
+    client = mockQueryAPIClient({ instance });
   });
   it('should provide client', () => {
     const api = new QueryAPI(client);
@@ -20,7 +26,7 @@ describe('Query API', () => {
     expect(api.client).toBe(client);
   });
   it('should get resources', async () => {
-    const resources = mock<Resources>();
+    const resources = mockResources();
 
     instance.get.mockResolvedValue({ data: resources });
 
@@ -38,7 +44,7 @@ describe('Query API', () => {
     );
   });
   it('should get blinds', async () => {
-    const resources = mock<Resources>({
+    const resources = mockResources({
       blinds: {
         item0: {
           name: '__blind__',
@@ -68,7 +74,7 @@ describe('Query API', () => {
     ]);
   });
   it('should throw an error for invalid blinds', async () => {
-    const resources = mock<Resources>({ blinds: undefined });
+    const resources = mockResources({ blinds: undefined });
 
     instance.get.mockResolvedValue({ data: resources });
 
@@ -77,7 +83,7 @@ describe('Query API', () => {
     await expect(api.getBlinds()).rejects.toThrow('No blinds found.');
   });
   it('should get specific blind', async () => {
-    const resources = mock<Resources>({
+    const resources = mockResources({
       blinds: {
         item0: {
           name: '__blind__',
@@ -107,7 +113,7 @@ describe('Query API', () => {
     );
   });
   it('should throw an error for invalid blind', async () => {
-    const resources = mock<Resources>({ blinds: undefined });
+    const resources = mockResources({ blinds: undefined });
 
     instance.get.mockResolvedValue({ data: resources });
 
@@ -116,7 +122,7 @@ describe('Query API', () => {
     await expect(api.getBlind('item0')).rejects.toThrow('Blind not found.');
   });
   it('should get meteo', async () => {
-    const resources = mock<Resources>({
+    const resources = mockResources({
       globals: {
         meteo: {
           twilight: {
@@ -179,7 +185,7 @@ describe('Query API', () => {
     await expect(api.getMeteo()).resolves.toEqual(new MeteoAPI(api));
   });
   it('should throw an error for invalid meteo', async () => {
-    const resources = mock<Resources>({ globals: { meteo: undefined } });
+    const resources = mockResources({ globals: { meteo: undefined } });
 
     instance.get.mockResolvedValue({ data: resources });
 
@@ -188,7 +194,7 @@ describe('Query API', () => {
     await expect(api.getMeteo()).rejects.toThrow('Meteo not found.');
   });
   it('should get network', async () => {
-    const resources = mock<Resources>({ globals: { network: {} } });
+    const resources = mockResources({ globals: { network: {} } });
 
     instance.get.mockResolvedValue({ data: resources });
 
@@ -197,7 +203,7 @@ describe('Query API', () => {
     await expect(api.getNetwork()).resolves.toEqual(new NetworkAPI(api));
   });
   it('should throw an error for invalid network', async () => {
-    const resources = mock<Resources>({ globals: { network: undefined } });
+    const resources = mockResources({ globals: { network: undefined } });
 
     instance.get.mockResolvedValue({ data: resources });
 
@@ -206,7 +212,7 @@ describe('Query API', () => {
     await expect(api.getNetwork()).rejects.toThrow('Network not found.');
   });
   it('should get status', async () => {
-    const status = mock<Status>();
+    const status = mockStatus();
 
     instance.get.mockResolvedValue({ data: status });
 
