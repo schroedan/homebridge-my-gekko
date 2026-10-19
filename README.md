@@ -44,7 +44,7 @@ The plugin can connect either locally or via myGEKKO Plus.
       "ttl": 1,
       "retries": 1,
       "interval": 3,
-      "deferance": 10,
+      "deferance": 3,
       "delay": 500
     }
   ]
@@ -72,7 +72,7 @@ The `username` and `password` must be defined in the local QueryAPI settings of 
       "ttl": 1,
       "retries": 1,
       "interval": 3,
-      "deferance": 10,
+      "deferance": 3,
       "delay": 500
     }
   ]

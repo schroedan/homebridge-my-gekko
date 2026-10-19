@@ -50,9 +50,9 @@ describe('Blind Observer', () => {
     expect(observer.config).toBe(config);
   });
   it('should return that allocation is deferred', () => {
-    config.deferance = 10;
+    config.deferance = 3;
 
-    characteristics = mockBlindCharacteristics({ usher: { pending: true } });
+    characteristics = mockBlindCharacteristics({ commands: { pending: true } });
 
     const observer = new BlindObserver(
       characteristics,
@@ -219,10 +219,12 @@ describe('Blind Observer', () => {
     );
     expect(characteristics.updateCurrentPosition).toHaveBeenCalledWith(50);
   });
-  it('should not update current position in characteristics when allocation is deferred', async () => {
+  it('should update current position in characteristics even when allocation is deferred', async () => {
     jest
       .spyOn(BlindObserver.prototype, 'allocationDeferred', 'get')
       .mockReturnValue(true);
+
+    characteristics.getPosition.mockResolvedValue(50);
 
     const observer = new BlindObserver(
       characteristics,
@@ -234,7 +236,7 @@ describe('Blind Observer', () => {
 
     await observer.updateCurrentPosition();
 
-    expect(characteristics.updateCurrentPosition).not.toHaveBeenCalled();
+    expect(characteristics.updateCurrentPosition).toHaveBeenCalled();
   });
   it('should not update current position in characteristics for same position', async () => {
     characteristics.currentPosition.value = 50;
@@ -259,6 +261,7 @@ describe('Blind Observer', () => {
 
     characteristics.name.value = '__name__';
     characteristics.getPosition.mockResolvedValue(50);
+    characteristics.isStopped.mockResolvedValue(true);
 
     const observer = new BlindObserver(
       characteristics,
@@ -274,6 +277,26 @@ describe('Blind Observer', () => {
       'Updating target position of blind __name__: 50%',
     );
     expect(characteristics.updateTargetPosition).toHaveBeenCalledWith(50);
+  });
+  it('should not update target position in characteristics while blind is moving', async () => {
+    jest
+      .spyOn(BlindObserver.prototype, 'allocationDeferred', 'get')
+      .mockReturnValue(false);
+
+    characteristics.getPosition.mockResolvedValue(50);
+    characteristics.isStopped.mockResolvedValue(false);
+
+    const observer = new BlindObserver(
+      characteristics,
+      eventEmitter,
+      logger,
+      heartbeat,
+      config,
+    );
+
+    await observer.updateTargetPosition();
+
+    expect(characteristics.updateTargetPosition).not.toHaveBeenCalled();
   });
   it('should not update target position in characteristics when allocation is deferred', async () => {
     jest
@@ -379,10 +402,12 @@ describe('Blind Observer', () => {
     );
     expect(characteristics.updatePositionState).toHaveBeenCalledWith('__stp__');
   });
-  it('should not update position state in characteristics when allocation is deferred', async () => {
+  it('should update position state in characteristics even when allocation is deferred', async () => {
     jest
       .spyOn(BlindObserver.prototype, 'allocationDeferred', 'get')
       .mockReturnValue(true);
+
+    characteristics.getPositionState.mockResolvedValue(1);
 
     const observer = new BlindObserver(
       characteristics,
@@ -394,7 +419,7 @@ describe('Blind Observer', () => {
 
     await observer.updatePositionState();
 
-    expect(characteristics.updatePositionState).not.toHaveBeenCalled();
+    expect(characteristics.updatePositionState).toHaveBeenCalled();
   });
   it('should not update position state in characteristics for same position state', async () => {
     characteristics.positionState.value = '__dec__';

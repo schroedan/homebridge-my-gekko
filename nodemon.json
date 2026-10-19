@@ -1,7 +1,7 @@
 {
   "watch": ["src"],
   "ext": "ts",
-  "ignore": [],
+  "ignore": ["src/**/*.spec.ts", "src/test/"],
   "exec": "tsc -p tsconfig.build.json && homebridge -D -I -U .homebridge",
   "signal": "SIGTERM",
   "env": {

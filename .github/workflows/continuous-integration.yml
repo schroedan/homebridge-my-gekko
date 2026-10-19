@@ -30,7 +30,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install --frozen-lockfile --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Check types
         run: npm run -- check
@@ -76,7 +76,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install --frozen-lockfile --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Publish package
         run: npm publish

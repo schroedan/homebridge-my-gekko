@@ -2,14 +2,13 @@ import { API, Logging, PlatformConfig, Service } from 'homebridge';
 import { MockProxy } from 'jest-mock-extended';
 
 import { BlindAPI, BlindState, BlindSumState } from '../api';
-import { Delay } from '../delay';
+import { LatestTaskQueue } from '../latest-task-queue';
 import { PlatformEventEmitter } from '../platform-events';
 import {
   mockAPI,
   mockBlindAPI,
   mockCharacteristic,
   mockCharacteristicClass,
-  mockDelay,
   mockLogging,
   mockPlatformConfig,
   mockPlatformEventEmitter,
@@ -147,19 +146,7 @@ describe('Blind Characteristics', () => {
       api.hap.Characteristic.ObstructionDetected,
     );
   });
-  it('should provide usher', () => {
-    const characteristics = new BlindCharacteristics(
-      api,
-      service,
-      blind,
-      config,
-      logger,
-      eventEmitter,
-    );
-
-    expect(characteristics.usher).toBeInstanceOf(Delay);
-  });
-  it('should provide custom usher', () => {
+  it('should provide command queue with configured delay', () => {
     config.delay = 100;
 
     const characteristics = new BlindCharacteristics(
@@ -170,9 +157,11 @@ describe('Blind Characteristics', () => {
       logger,
       eventEmitter,
     );
-    const usher = characteristics.usher;
+    const commands = characteristics.commands;
 
-    expect(characteristics.usher).toBe(usher);
+    expect(commands).toBeInstanceOf(LatestTaskQueue);
+    expect(commands.delay).toBe(100);
+    expect(characteristics.commands).toBe(commands);
   });
   it('should register listeners', async () => {
     const name = mockCharacteristic();
@@ -180,12 +169,6 @@ describe('Blind Characteristics', () => {
     const targetPosition = mockCharacteristic();
     const positionState = mockCharacteristic();
     const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
-
-    usher.set.mockImplementation((callback) => {
-      callback();
-      return usher;
-    });
 
     positionState.onGet.mockImplementation((handler) => {
       handler(undefined);
@@ -216,9 +199,6 @@ describe('Blind Characteristics', () => {
     jest
       .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
       .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
 
     const characteristics = new BlindCharacteristics(
       api,
@@ -246,7 +226,6 @@ describe('Blind Characteristics', () => {
     const targetPosition = mockCharacteristic();
     const positionState = mockCharacteristic();
     const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
 
     name.onGet.mockImplementation((handler) => {
       handler(undefined);
@@ -268,9 +247,6 @@ describe('Blind Characteristics', () => {
     jest
       .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
       .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
 
     const characteristics = new BlindCharacteristics(
       api,
@@ -293,7 +269,6 @@ describe('Blind Characteristics', () => {
     const targetPosition = mockCharacteristic();
     const positionState = mockCharacteristic();
     const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
 
     currentPosition.onGet.mockImplementation((handler) => {
       handler(undefined);
@@ -315,9 +290,6 @@ describe('Blind Characteristics', () => {
     jest
       .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
       .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
 
     const characteristics = new BlindCharacteristics(
       api,
@@ -340,16 +312,10 @@ describe('Blind Characteristics', () => {
     const targetPosition = mockCharacteristic();
     const positionState = mockCharacteristic();
     const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);
       return targetPosition;
-    });
-
-    usher.set.mockImplementation((callback) => {
-      callback();
-      return usher;
     });
 
     jest
@@ -367,9 +333,6 @@ describe('Blind Characteristics', () => {
     jest
       .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
       .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
 
     const characteristics = new BlindCharacteristics(
       api,
@@ -381,28 +344,23 @@ describe('Blind Characteristics', () => {
     );
 
     characteristics.registerListeners();
+    jest.runAllTimers();
 
     await new Promise(setImmediate);
 
-    expect(blind.getPosition).toHaveBeenCalled();
+    expect(blind.getPosition).not.toHaveBeenCalled();
     expect(blind.setPosition).toHaveBeenCalledWith(50);
   });
-  it('should not apply position after a short delay on set target position', async () => {
+  it('should apply position after a short delay even if it equals the current position', async () => {
     const name = mockCharacteristic();
     const currentPosition = mockCharacteristic();
     const targetPosition = mockCharacteristic();
     const positionState = mockCharacteristic();
     const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);
       return targetPosition;
-    });
-
-    usher.set.mockImplementation((callback) => {
-      callback();
-      return usher;
     });
 
     jest
@@ -420,9 +378,6 @@ describe('Blind Characteristics', () => {
     jest
       .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
       .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
 
     blind.getPosition.mockResolvedValue(50);
 
@@ -436,11 +391,12 @@ describe('Blind Characteristics', () => {
     );
 
     characteristics.registerListeners();
+    jest.runAllTimers();
 
     await new Promise(setImmediate);
 
-    expect(blind.getPosition).toHaveBeenCalled();
-    expect(blind.setPosition).not.toHaveBeenCalled();
+    expect(blind.getPosition).not.toHaveBeenCalled();
+    expect(blind.setPosition).toHaveBeenCalledWith(50);
   });
   it('should update name', () => {
     const characteristics = new BlindCharacteristics(
@@ -648,76 +604,16 @@ describe('Blind Characteristics', () => {
 
     await expect(characteristics.isObstructionDetected()).resolves.toBeTruthy();
   });
-  it('should log error on get current position', async () => {
-    const name = mockCharacteristic();
-    const currentPosition = mockCharacteristic();
-    const targetPosition = mockCharacteristic();
-    const positionState = mockCharacteristic();
-    const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
-
-    targetPosition.onSet.mockImplementation((handler) => {
-      handler(50, undefined);
-      return targetPosition;
-    });
-
-    usher.set.mockImplementation((callback) => {
-      callback();
-      return usher;
-    });
-
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'name', 'get')
-      .mockReturnValue(name);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'currentPosition', 'get')
-      .mockReturnValue(currentPosition);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'targetPosition', 'get')
-      .mockReturnValue(targetPosition);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'positionState', 'get')
-      .mockReturnValue(positionState);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
-      .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
-
-    blind.getPosition.mockRejectedValue('__reason__');
-
-    const characteristics = new BlindCharacteristics(
-      api,
-      service,
-      blind,
-      config,
-      logger,
-      eventEmitter,
-    );
-
-    characteristics.registerListeners();
-
-    await new Promise(setImmediate);
-
-    expect(logger.error).toHaveBeenCalledWith('__reason__');
-  });
   it('should log error on set target position', async () => {
     const name = mockCharacteristic();
     const currentPosition = mockCharacteristic();
     const targetPosition = mockCharacteristic();
     const positionState = mockCharacteristic();
     const obstructionDetected = mockCharacteristic();
-    const usher = mockDelay();
 
     targetPosition.onSet.mockImplementation((handler) => {
       handler(50, undefined);
       return targetPosition;
-    });
-
-    usher.set.mockImplementation((callback) => {
-      callback();
-      return usher;
     });
 
     jest
@@ -735,11 +631,7 @@ describe('Blind Characteristics', () => {
     jest
       .spyOn(BlindCharacteristics.prototype, 'obstructionDetected', 'get')
       .mockReturnValue(obstructionDetected);
-    jest
-      .spyOn(BlindCharacteristics.prototype, 'usher', 'get')
-      .mockReturnValue(usher);
 
-    blind.getPosition.mockResolvedValue(0);
     blind.setPosition.mockRejectedValue('__reason__');
 
     const characteristics = new BlindCharacteristics(
@@ -752,9 +644,78 @@ describe('Blind Characteristics', () => {
     );
 
     characteristics.registerListeners();
+    jest.runAllTimers();
 
     await new Promise(setImmediate);
 
     expect(logger.error).toHaveBeenCalledWith('__reason__');
+  });
+  it('should only send the latest of rapidly changed positions', async () => {
+    const name = mockCharacteristic();
+    const sent: number[] = [];
+
+    name.value = '__name__';
+    jest
+      .spyOn(BlindCharacteristics.prototype, 'name', 'get')
+      .mockReturnValue(name);
+    blind.setPosition.mockImplementation(async (position) => {
+      sent.push(position);
+    });
+
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
+
+    characteristics.applyPosition(10);
+    characteristics.applyPosition(20);
+    characteristics.applyPosition(30);
+
+    jest.runAllTimers();
+    await new Promise(setImmediate);
+
+    expect(sent).toEqual([70]);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Skipping superseded target position of blind __name__: 10%',
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Skipping superseded target position of blind __name__: 20%',
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Sending target position of blind __name__: 30%',
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Sent target position of blind __name__: 30%',
+    );
+  });
+  it('should log unnamed blinds when applying positions', async () => {
+    const name = mockCharacteristic();
+
+    name.value = '';
+    jest
+      .spyOn(BlindCharacteristics.prototype, 'name', 'get')
+      .mockReturnValue(name);
+
+    const characteristics = new BlindCharacteristics(
+      api,
+      service,
+      blind,
+      config,
+      logger,
+      eventEmitter,
+    );
+
+    characteristics.applyPosition(10);
+
+    jest.runAllTimers();
+    await new Promise(setImmediate);
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Sent target position of blind unnamed: 10%',
+    );
   });
 });

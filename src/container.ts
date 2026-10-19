@@ -54,8 +54,9 @@ export class Container {
         meteo: true,
         meteoCacheSize: 10,
         ttl: 1,
+        retries: 3,
         interval: 3,
-        deferance: 10,
+        deferance: 3,
         delay: 500,
       },
       config,
@@ -196,12 +197,16 @@ export class Container {
           username: this.config.username,
           key: this.config.key,
           gekkoid: this.config.gekkoid,
+          ttl: this.config.ttl,
+          retries: this.config.retries,
         });
       } else {
         this._queryAPIClient = new LocalQueryAPIClient({
           host: this.config.host,
           username: this.config.username,
           password: this.config.password,
+          ttl: this.config.ttl,
+          retries: this.config.retries,
         });
       }
     }

@@ -8,13 +8,14 @@ import {
 } from 'homebridge';
 
 import { BlindAPI, BlindState, BlindSumState } from '../api';
-import { Delay } from '../delay';
+import { describeError } from '../describe-error';
+import { LatestTaskQueue } from '../latest-task-queue';
 import { PlatformEventEmitter } from '../platform-events';
 
 let Characteristic: typeof ServcieCharacteristic;
 
 export class BlindCharacteristics {
-  private _usher?: Delay<() => void>;
+  private _commands?: LatestTaskQueue;
 
   get name(): ServcieCharacteristic {
     return this.service.getCharacteristic(Characteristic.Name);
@@ -36,12 +37,12 @@ export class BlindCharacteristics {
     return this.service.getCharacteristic(Characteristic.ObstructionDetected);
   }
 
-  get usher(): Delay<() => void> {
-    if (this._usher === undefined) {
-      this._usher = new Delay(this.config.delay);
+  get commands(): LatestTaskQueue {
+    if (this._commands === undefined) {
+      this._commands = new LatestTaskQueue(this.config.delay);
     }
 
-    return this._usher;
+    return this._commands;
   }
 
   constructor(
@@ -60,30 +61,14 @@ export class BlindCharacteristics {
 
     this.currentPosition.onGet(() => this.getPosition());
 
-    this.targetPosition.onSet((value: CharacteristicValue) => {
-      this.usher.set(() => {
-        this.getPosition()
-          .then((currentValue) => {
-            if (currentValue === value) {
-              return;
-            }
-
-            this.setPosition(value).catch((reason) => {
-              this.logger.error(reason);
-            });
-          })
-          .catch((reason) => {
-            this.logger.error(reason);
-          });
-      });
-    });
+    this.targetPosition.onSet((value: CharacteristicValue) => this.applyPosition(value));
 
     this.positionState.onGet(() => this.getPositionState());
 
     this.obstructionDetected.onGet(() => this.isObstructionDetected());
 
     this.eventEmitter.onShutdown(() => {
-      this.usher.clear();
+      this.commands.clear();
     });
   }
 
@@ -121,6 +106,32 @@ export class BlindCharacteristics {
 
   async getPosition(): Promise<CharacteristicValue> {
     return Math.round(100 - (await this.blind.getPosition()));
+  }
+
+  applyPosition(value: CharacteristicValue): void {
+    const name = this.name.value || 'unnamed';
+
+    // wait for the target to settle, e.g. while moving a slider, and send one
+    // command at a time, so that commands cannot overtake each other on their
+    // way to the myGEKKO, skipping those superseded in the meantime
+    this.commands
+      .enqueue(async () => {
+        this.logger.debug(
+          `Sending target position of blind ${name}: ${value}%`,
+        );
+        await this.setPosition(value);
+        this.logger.debug(`Sent target position of blind ${name}: ${value}%`);
+      })
+      .then((executed) => {
+        if (!executed) {
+          this.logger.debug(
+            `Skipping superseded target position of blind ${name}: ${value}%`,
+          );
+        }
+      })
+      .catch((reason) => {
+        this.logger.error(describeError(reason));
+      });
   }
 
   async setPosition(value: CharacteristicValue): Promise<void> {

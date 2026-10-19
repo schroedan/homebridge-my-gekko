@@ -87,6 +87,8 @@ export class QueryAPI {
   async setBlindStatus(key: string, value: string): Promise<void> {
     await this.client.instance.get(`/var/blinds/${key}/scmd/set`, {
       cache: false,
+      // a retry could arrive after a newer command and override it
+      'axios-retry': { retries: 0 },
       params: { value },
     });
   }

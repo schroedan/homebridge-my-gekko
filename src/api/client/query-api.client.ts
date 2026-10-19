@@ -20,7 +20,7 @@ export interface QueryAPIClient {
 export function createInstance(config: {
   auth?: AxiosBasicCredentials;
   baseURL?: string;
-  params?: any;
+  params?: Record<string, unknown>;
   ttl?: number;
   retries?: number;
 }): AxiosCacheInstance {
@@ -28,11 +28,18 @@ export function createInstance(config: {
     auth: config.auth,
     baseURL: config.baseURL,
     params: config.params,
+    // do not let hanging requests be processed long after newer ones
+    timeout: 10 * 1000,
   });
 
-  axiosRetry(instance, { retries: config.retries });
-
-  return setupCache(instance, {
+  const cachedInstance = setupCache(instance, {
     ttl: config.ttl,
   });
+
+  // retries must be set up after the cache: otherwise a retry waits for the
+  // cache entry of its own failed request, which never resolves, and all
+  // further requests for the same url hang
+  axiosRetry(cachedInstance, { retries: config.retries });
+
+  return cachedInstance;
 }

@@ -1,6 +1,7 @@
 import { CharacteristicValue, Logging } from 'homebridge';
 
 import { MeteoBrightnessCharacteristics } from '../characteristics';
+import { describeError } from '../describe-error';
 import { PlatformEventEmitter } from '../platform-events';
 
 export class MeteoBrightnessObserver {
@@ -16,7 +17,7 @@ export class MeteoBrightnessObserver {
   registerListeners(): void {
     this.eventEmitter.onHeartbeat(() => {
       this.updateCurrentAmbientLightLevel().catch((reason) => {
-        this.logger.error(reason);
+        this.logger.error(describeError(reason));
       });
     });
   }

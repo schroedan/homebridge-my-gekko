@@ -28,8 +28,8 @@ export class LocalQueryAPIClient implements QueryAPIClient {
     this.instance = createInstance({
       auth: this.auth,
       baseURL: this.baseURL,
-      ttl: 1000 * (config.ttl || 3),
-      retries: config.retries || 3,
+      ttl: 1000 * (config.ttl ?? 3),
+      retries: config.retries ?? 3,
     });
   }
 }

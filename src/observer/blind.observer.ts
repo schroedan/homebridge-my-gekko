@@ -1,17 +1,18 @@
 import { Logging, PlatformConfig } from 'homebridge';
 
 import { BlindCharacteristics } from '../characteristics';
+import { describeError } from '../describe-error';
 import { Interval } from '../interval';
 import { PlatformEventEmitter } from '../platform-events';
 
 export class BlindObserver {
   get allocationDeferred(): boolean {
-    if (this.characteristics.usher.pending) {
+    if (this.characteristics.commands.pending) {
       return true;
     }
 
     return (
-      this.heartbeat.timestamp - this.characteristics.usher.timestamp <
+      this.heartbeat.timestamp - this.characteristics.commands.timestamp <
       this.config.deferance
     );
   }
@@ -33,7 +34,7 @@ export class BlindObserver {
         this.updatePositionState(),
         this.updateObstructionDetected(),
       ]).catch((reason) => {
-        this.logger.error(reason);
+        this.logger.error(describeError(reason));
       });
     });
   }
@@ -55,10 +56,7 @@ export class BlindObserver {
     const name = this.characteristics.name.value || 'unnamed';
     const value = await this.characteristics.getPosition();
 
-    if (
-      this.allocationDeferred ||
-      this.characteristics.currentPosition.value === value
-    ) {
+    if (this.characteristics.currentPosition.value === value) {
       return;
     }
 
@@ -71,9 +69,12 @@ export class BlindObserver {
     const name = this.characteristics.name.value || 'unnamed';
     const value = await this.characteristics.getPosition();
 
+    // keep the target of a recent command and do not follow intermediate
+    // positions while the blind is moving
     if (
       this.allocationDeferred ||
-      this.characteristics.targetPosition.value === value
+      this.characteristics.targetPosition.value === value ||
+      !(await this.characteristics.isStopped())
     ) {
       return;
     }
@@ -87,10 +88,7 @@ export class BlindObserver {
     const name = this.characteristics.name.value || 'unnamed';
     const value = await this.characteristics.getPositionState();
 
-    if (
-      this.allocationDeferred ||
-      this.characteristics.positionState.value === value
-    ) {
+    if (this.characteristics.positionState.value === value) {
       return;
     }
 

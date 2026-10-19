@@ -27,8 +27,8 @@ export class PlusQueryAPIClient implements QueryAPIClient {
     this.instance = createInstance({
       baseURL: this.baseURL,
       params: this.auth,
-      ttl: 1000 * (config.ttl || 3),
-      retries: config.retries || 3,
+      ttl: 1000 * (config.ttl ?? 3),
+      retries: config.retries ?? 3,
     });
   }
 }

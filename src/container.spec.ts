@@ -79,8 +79,9 @@ describe('Container', () => {
     expect(container.config.blinds).toBe(true);
     expect(container.config.meteo).toBe(true);
     expect(container.config.ttl).toBe(1);
+    expect(container.config.retries).toBe(3);
     expect(container.config.interval).toBe(3);
-    expect(container.config.deferance).toBe(10);
+    expect(container.config.deferance).toBe(3);
     expect(container.config.delay).toBe(500);
   });
   it('should provide platform event emitter', () => {
@@ -188,6 +189,10 @@ describe('Container', () => {
     const queryAPIClient = container.queryAPIClient;
 
     expect(queryAPIClient).toBeInstanceOf(LocalQueryAPIClient);
+    expect(queryAPIClient).toHaveProperty(
+      'config',
+      expect.objectContaining({ ttl: 1, retries: 3 }),
+    );
     expect(container.queryAPIClient).toBe(queryAPIClient);
   });
   it('should provide plus query API client', () => {
@@ -195,6 +200,10 @@ describe('Container', () => {
     const queryAPIClient = container.queryAPIClient;
 
     expect(queryAPIClient).toBeInstanceOf(PlusQueryAPIClient);
+    expect(queryAPIClient).toHaveProperty(
+      'config',
+      expect.objectContaining({ ttl: 1, retries: 3 }),
+    );
     expect(container.queryAPIClient).toBe(queryAPIClient);
   });
   it('should provide UUID', () => {

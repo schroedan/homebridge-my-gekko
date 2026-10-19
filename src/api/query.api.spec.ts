@@ -234,6 +234,7 @@ describe('Query API', () => {
 
     expect(instance.get).toHaveBeenCalledWith('/var/blinds/item0/scmd/set', {
       cache: false,
+      'axios-retry': { retries: 0 },
       params: { value: 'T' },
     });
   });

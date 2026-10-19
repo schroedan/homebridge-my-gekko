@@ -14,10 +14,10 @@
     "build": "rimraf ./dist && tsc -p tsconfig.build.json",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
-    "lint": "eslint src/**.ts --max-warnings=0",
+    "lint": "eslint src --max-warnings=0",
     "prepublishOnly": "npm run build",
     "start": "npm run build && npm link && nodemon",
-    "test": "jest --forceExit --detectOpenHandles"
+    "test": "jest"
   },
   "author": "Daniel Schröder <daniel.schroeder@skriptfabrik.com>",
   "engines": {
@@ -63,7 +63,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24",
+      "version": "^22.10.0 || ^24.0.0",
       "onFail": "download"
     }
   }

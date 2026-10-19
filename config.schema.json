@@ -95,7 +95,7 @@
       },
       "retries": {
         "title": "Client retries",
-        "description": "The number of retries for failed reqests to myGEKKO.  Default: 3.",
+        "description": "The number of retries for failed requests to myGEKKO.  Default: 3.",
         "type": "integer",
         "default": 3,
         "minimum": 0,
@@ -111,7 +111,7 @@
       },
       "deferance": {
         "title": "Update deferance after allocation",
-        "description": "The time, in seconds, to wait before resetting a characteristic value.  Default: 10.",
+        "description": "The time, in seconds, to keep the target position of a command before following the position reported by myGEKKO again.  Default: 3.",
         "type": "integer",
         "default": 10,
         "minimum": 0,

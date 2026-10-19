@@ -65,7 +65,7 @@ export class MeteoAPI {
   }
 
   protected convertFormatToUnit(format: string): string {
-    const groups = format.match(/[a-z]+\[[0-9-\.]+,[0-9-\.]+\]\((.+)\)/);
+    const groups = format.match(/[a-z]+\[[0-9.-]+,[0-9.-]+\]\((.+)\)/);
     const unit = (groups || []).pop();
 
     if (unit === undefined) {

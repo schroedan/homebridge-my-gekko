@@ -1,6 +1,7 @@
 import { CharacteristicValue, Logging } from 'homebridge';
 
 import { MeteoTemperatureCharacteristics } from '../characteristics';
+import { describeError } from '../describe-error';
 import { PlatformEventEmitter } from '../platform-events';
 
 export class MeteoTemperatureObserver {
@@ -16,7 +17,7 @@ export class MeteoTemperatureObserver {
   registerListeners(): void {
     this.eventEmitter.onHeartbeat(() => {
       this.updateCurrentTemperature().catch((reason) => {
-        this.logger.error(reason);
+        this.logger.error(describeError(reason));
       });
     });
   }

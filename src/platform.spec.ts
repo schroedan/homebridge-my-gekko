@@ -4,7 +4,7 @@ import { MockProxy } from 'jest-mock-extended';
 import { Categories } from './categories';
 import { Container } from './container';
 import { Interval } from './interval';
-import { Platform } from './platform';
+import { PLATFORM_NAME, PLUGIN_IDENTIFIER, Platform } from './platform';
 import {
   mockAPI,
   mockBlindAPI,
@@ -58,6 +58,7 @@ describe('Platform', () => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
   it('should provide container', () => {
     const platform = new Platform(log, config, api);
@@ -72,6 +73,7 @@ describe('Platform', () => {
       mockContainer({
         api,
         config: mockPlatformConfig({
+          plus: false,
           host: undefined,
           username: undefined,
           password: undefined,
@@ -86,6 +88,31 @@ describe('Platform', () => {
     expect(log.error).toHaveBeenCalledWith(
       'Platform config missing - please check the config file',
     );
+  });
+  it.each([
+    [{ plus: false, host: 'h', username: 'u', password: 'p' }, false],
+    [{ plus: false, host: undefined, username: 'u', password: 'p' }, true],
+    [{ plus: false, host: 'h', username: undefined, password: 'p' }, true],
+    [{ plus: false, host: 'h', username: 'u', password: undefined }, true],
+    [{ plus: true, username: 'u', key: 'k', gekkoid: 'g' }, false],
+    [{ plus: true, username: undefined, key: 'k', gekkoid: 'g' }, true],
+    [{ plus: true, username: 'u', key: undefined, gekkoid: 'g' }, true],
+    [{ plus: true, username: 'u', key: 'k', gekkoid: undefined }, true],
+  ])('should validate platform config %o as invalid: %s', (props, invalid) => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        config: mockPlatformConfig(props),
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+
+    const platform = new Platform(log, config, api);
+
+    expect(platform.isConfigInvalid()).toBe(invalid);
   });
   it('should register listeners', () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
@@ -463,7 +490,7 @@ describe('Platform', () => {
 
     expect(accessories.length).toEqual(0);
   });
-  it('should not descover blind accessories', async () => {
+  it('should not discover blind accessories', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const eventEmitter = mockPlatformEventEmitter();
     const discoverBlindAccessories = jest.spyOn(
@@ -492,7 +519,7 @@ describe('Platform', () => {
     expect(discoverBlindAccessories).toHaveBeenCalled();
     expect(discoverMeteoAccessories).not.toHaveBeenCalled();
   });
-  it('should not descover meteo accessories', async () => {
+  it('should not discover meteo accessories', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const eventEmitter = mockPlatformEventEmitter();
     const discoverBlindAccessories = jest.spyOn(
@@ -638,6 +665,60 @@ describe('Platform', () => {
 
     expect(configureMeteoTemperatureAccessory).toHaveBeenCalledWith(accessory);
   });
+  it('should track accessories whose configuration failed', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const configureBlindAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureBlindAccessory',
+    );
+    const accessory = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__uuid__',
+    });
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        config,
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+    configureBlindAccessory.mockRejectedValue('__reason__');
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(accessory);
+
+    await new Promise(setImmediate);
+
+    expect(log.error).toHaveBeenCalledWith('__reason__');
+    // a failed configuration must not lead to a second registration
+    expect(platform.accessoryExists(accessory)).toBe(true);
+  });
+  it('should not track accessories of unknown type', () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const accessory = mockPlatformAccessory({
+      category: Categories.OTHER,
+      context: { type: '__unknown__' },
+      UUID: '__uuid__',
+    });
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(accessory);
+
+    expect(log.warn).toHaveBeenCalled();
+    expect(platform.accessoryExists(accessory)).toBe(false);
+  });
   it('should log errors on blind accessory configuration', async () => {
     const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
     const eventEmitter = mockPlatformEventEmitter();
@@ -651,7 +732,7 @@ describe('Platform', () => {
     });
 
     getContainer.mockReturnValue(
-      mockContainer({ api, eventEmitter, logger: log }),
+      mockContainer({ api, config, eventEmitter, logger: log }),
     );
     configureBlindAccessory.mockRejectedValue('__reason__');
 
@@ -679,7 +760,7 @@ describe('Platform', () => {
     accessory.context.type = 'meteo-brightness';
 
     getContainer.mockReturnValue(
-      mockContainer({ api, eventEmitter, logger: log }),
+      mockContainer({ api, config, eventEmitter, logger: log }),
     );
     configureMeteoBrightnessAccessory.mockRejectedValue('__reason__');
 
@@ -707,7 +788,7 @@ describe('Platform', () => {
     accessory.context.type = 'meteo-temperature';
 
     getContainer.mockReturnValue(
-      mockContainer({ api, eventEmitter, logger: log }),
+      mockContainer({ api, config, eventEmitter, logger: log }),
     );
     configureMeteoTemperatureAccessory.mockRejectedValue('__reason__');
 
@@ -731,7 +812,7 @@ describe('Platform', () => {
     accessory.context.type = 'unknown';
 
     getContainer.mockReturnValue(
-      mockContainer({ api, eventEmitter, logger: log }),
+      mockContainer({ api, config, eventEmitter, logger: log }),
     );
 
     const platform = new Platform(log, config, api);
@@ -742,6 +823,187 @@ describe('Platform', () => {
 
     expect(log.warn).toHaveBeenCalledWith(
       'Accessory category 1 (type: unknown) unknown to this platform',
+    );
+  });
+  it('should not configure accessories of disabled systems', () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const configureBlindAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureBlindAccessory',
+    );
+    const configureMeteoBrightnessAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureMeteoBrightnessAccessory',
+    );
+    const blind = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__blind__',
+    });
+    const meteo = mockPlatformAccessory({
+      category: Categories.OTHER,
+      context: { type: 'meteo-brightness' },
+      UUID: '__meteo__',
+    });
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        config: mockPlatformConfig({ blinds: false, meteo: false }),
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(blind);
+    platform.configureAccessory(meteo);
+
+    expect(configureBlindAccessory).not.toHaveBeenCalled();
+    expect(configureMeteoBrightnessAccessory).not.toHaveBeenCalled();
+    // tracked, so that they are removed with the next discovery
+    expect(platform.accessoryExists(blind)).toBe(true);
+    expect(platform.accessoryExists(meteo)).toBe(true);
+  });
+  it('should remove stale accessories once after the first discovery', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const configureBlindAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureBlindAccessory',
+    );
+    const available = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__available__',
+      displayName: '__available__',
+    });
+    const stale = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__stale__',
+      displayName: '__stale__',
+    });
+    const removedLater = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__removed_later__',
+      displayName: '__removed_later__',
+    });
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        config: mockPlatformConfig({ blinds: true, meteo: false }),
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+    configureBlindAccessory.mockResolvedValue();
+    discoverBlindAccessories.mockResolvedValue([available, removedLater]);
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(available);
+    platform.configureAccessory(stale);
+    platform.configureAccessory(removedLater);
+
+    await platform.discoverAccessories();
+
+    expect(log.info).toHaveBeenCalledWith(
+      'Removing accessory __stale__, which is no longer available',
+    );
+    expect(api.unregisterPlatformAccessories).toHaveBeenCalledWith(
+      PLUGIN_IDENTIFIER,
+      PLATFORM_NAME,
+      [stale],
+    );
+    expect(platform.accessoryExists(stale)).toBe(false);
+    expect(platform.accessoryExists(available)).toBe(true);
+
+    // later discoveries do not remove accessories anymore
+    discoverBlindAccessories.mockResolvedValue([available]);
+
+    await platform.discoverAccessories();
+
+    expect(api.unregisterPlatformAccessories).toHaveBeenCalledTimes(1);
+    expect(platform.accessoryExists(removedLater)).toBe(true);
+  });
+  it('should not remove accessories if there are no stale accessories', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const configureBlindAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureBlindAccessory',
+    );
+    const available = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__available__',
+    });
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        config: mockPlatformConfig({ blinds: true, meteo: false }),
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+    configureBlindAccessory.mockResolvedValue();
+    discoverBlindAccessories.mockResolvedValue([available]);
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(available);
+
+    await platform.discoverAccessories();
+
+    expect(api.unregisterPlatformAccessories).not.toHaveBeenCalled();
+  });
+  it('should not remove accessories if the discovery fails', async () => {
+    const getContainer = jest.spyOn(Platform.prototype, 'container', 'get');
+    const discoverBlindAccessories = jest.spyOn(
+      Platform.prototype,
+      'discoverBlindAccessories',
+    );
+    const configureBlindAccessory = jest.spyOn(
+      Platform.prototype,
+      'configureBlindAccessory',
+    );
+    const accessory = mockPlatformAccessory({
+      category: Categories.WINDOW_COVERING,
+      UUID: '__uuid__',
+    });
+
+    getContainer.mockReturnValue(
+      mockContainer({
+        api,
+        config: mockPlatformConfig({ blinds: true, meteo: false }),
+        eventEmitter: mockPlatformEventEmitter(),
+        logger: log,
+      }),
+    );
+    configureBlindAccessory.mockResolvedValue();
+    discoverBlindAccessories.mockRejectedValueOnce(new Error('__offline__'));
+    discoverBlindAccessories.mockResolvedValueOnce([]);
+
+    const platform = new Platform(log, config, api);
+
+    platform.configureAccessory(accessory);
+
+    await expect(platform.discoverAccessories()).rejects.toThrow('__offline__');
+    expect(api.unregisterPlatformAccessories).not.toHaveBeenCalled();
+
+    // the clean up is retried with the next successful discovery
+    await platform.discoverAccessories();
+
+    expect(api.unregisterPlatformAccessories).toHaveBeenCalledWith(
+      PLUGIN_IDENTIFIER,
+      PLATFORM_NAME,
+      [accessory],
     );
   });
 });
